@@ -3,7 +3,7 @@ from scipy.linalg import expm
 
 ###Simulation parameters###
 #number of cells
-NUM_CELLS = 12
+NUM_CELLS = 11
 #distance to look for alive or dead neighbours
 DISTANCE = 2
 #number of alive neighbours required for a flip (range(2,4) means either 2 or 3 alive neighbours are required)
@@ -70,7 +70,7 @@ def recursive_big_n_calculator(index, offset, alive_count):
         if alive_count in RULE:
             return np.eye(SIZE)
         else:
-            return np.zeros([SIZE, SIZE])
+            return 0
     dead = np.dot(dead_small_n_operators[index + offset], recursive_big_n_calculator(index, offset + 1, alive_count))
     alive = np.dot(alive_small_n_operators[index + offset], recursive_big_n_calculator(index, offset + 1, alive_count + 1))
     return dead + alive
