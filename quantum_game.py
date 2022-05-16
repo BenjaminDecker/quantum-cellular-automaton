@@ -4,19 +4,22 @@ import plotly.express as px
 
 ###Simulation parameters###
 #number of cells
-NUM_CELLS = 11
+NUM_CELLS = 9
 #distance to look for alive or dead neighbours
 DISTANCE = 2
 #number of alive neighbours required for a flip (range(2,4) means either 2 or 3 alive neighbours are required)
 RULE = range(2, 4)
 #time steps to simulate until the program exits
-NUM_STEPS = 50
+NUM_STEPS = 200
 #data type for real numbers
 DTYPE = np.float32
+#True means periodic boundary conditions, False means constant boundary conditions
+PERIODIC_BOUNDARIES = False
 
 ###Constants, do not change###
 KET_0 = np.array([1., 0.])
 KET_1 = np.array([0., 1.])
+KET_PLUS = np.array([1., 1.]) * (1 / np.sqrt(2))
 SIZE = 2**NUM_CELLS
 SHAPE = [ NUM_CELLS, SIZE, SIZE ]
 LOWERING_OPERATOR = np.array([[0., 1.], [0., 0.]])
@@ -25,19 +28,16 @@ PROJECTION_KET_0 = np.array([[1., 0.], [0., 0.]])
 PROJECTION_KET_1 = np.array([[0., 0.], [0., 1.]])
 
 def blinker_state():
-    state = np.array([1], dtype=DTYPE)
-    state = np.kron(state, KET_0)
-    state = np.kron(state, KET_0)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
+    state = np.array([1.])
+    for i in range(3):
+        state = np.kron(state, KET_0)
     state = np.kron(state, KET_1)
     state = np.kron(state, KET_0)
-    state = np.kron(state, KET_0)
+    state = np.kron(state, KET_1)
+    for i in range(3):
+        state = np.kron(state, KET_0)
     return state
+
 
 def empty():
     return np.empty(SHAPE, dtype=DTYPE)
@@ -51,29 +51,29 @@ def builder(index, matrix):
         acc = np.kron(acc, np.eye(2, dtype=DTYPE))
     return acc
 
-print("Building lowering operators...")
-lowering_operators = empty()
-for i in range(NUM_CELLS):
-    lowering_operators[i] = builder(i, LOWERING_OPERATOR)
+# print("Building lowering operators...")
+# lowering_operators = empty()
+# for i in range(NUM_CELLS):
+#     lowering_operators[i] = builder(i, LOWERING_OPERATOR)
 
-print("Building rising operators...")
-rising_operators = empty()
-for i in range(NUM_CELLS):
-    rising_operators[i] = builder(i, RISING_OPERATOR)
+# print("Building rising operators...")
+# rising_operators = empty()
+# for i in range(NUM_CELLS):
+#     rising_operators[i] = builder(i, RISING_OPERATOR)
 
-print("Building pauli operators...")
-pauli_operators = empty()
-for i in range(NUM_CELLS):
-    pauli_operators[i] = np.dot(lowering_operators[i], rising_operators[i]) - np.dot(rising_operators[i], lowering_operators[i])
+# print("Building pauli operators...")
+# pauli_operators = empty()
+# for i in range(NUM_CELLS):
+#     pauli_operators[i] = np.dot(lowering_operators[i], rising_operators[i]) - np.dot(rising_operators[i], lowering_operators[i])
 
-print("Building s operators...")
-s_operators = empty()
-for i in range(NUM_CELLS):
-    s_operators[i] = lowering_operators[i] + rising_operators[i]
+# print("Building s operators...")
+# s_operators = empty()
+# for i in range(NUM_CELLS):
+#     s_operators[i] = lowering_operators[i] + rising_operators[i]
 
-#Free some memory
-lowering_operators = []
-rising_operators = []
+# #Free some memory
+# lowering_operators = []
+# rising_operators = []
 
 print("Building dead small n operators...")
 dead_small_n_operators = empty()
@@ -89,26 +89,33 @@ def recursive_big_n_calculator(index, offset, alive_count):
     if offset == 0:
         return recursive_big_n_calculator(index, 1, alive_count)
     if alive_count >= RULE.stop:
-        return 0
+        return 0.
     if offset > DISTANCE:
         if alive_count in RULE:
             return np.eye(SIZE)
         else:
-            return 0
-    dead = np.dot(dead_small_n_operators[index + offset], recursive_big_n_calculator(index, offset + 1, alive_count))
-    alive = np.dot(alive_small_n_operators[index + offset], recursive_big_n_calculator(index, offset + 1, alive_count + 1))
+            return 0.
+    dead = np.dot(dead_small_n_operators[(index + offset) % NUM_CELLS], recursive_big_n_calculator(index, offset + 1, alive_count))
+    alive = np.dot(alive_small_n_operators[(index + offset) % NUM_CELLS], recursive_big_n_calculator(index, offset + 1, alive_count + 1))
     return dead + alive
 
-print("Building big N operators...")
-big_n_operators = empty()
-for i in range(DISTANCE, NUM_CELLS - DISTANCE):
-    print(i)
-    big_n_operators[i] = recursive_big_n_calculator(i, -DISTANCE, 0)
+# print("Building big N operators...")
+# big_n_operators = empty()
+# for i in range(DISTANCE, NUM_CELLS - DISTANCE):
+#     print(i)
+#     big_n_operators[i] = recursive_big_n_calculator(i, -DISTANCE, 0)
 
 print("Building hamiltonian...")
 hamiltonian = np.zeros([SIZE, SIZE], dtype=DTYPE)
-for i in range(DISTANCE, NUM_CELLS - DISTANCE):
-    hamiltonian += np.dot(s_operators[i], big_n_operators[i])
+step_range = range(NUM_CELLS) if PERIODIC_BOUNDARIES else range(DISTANCE, NUM_CELLS - DISTANCE)
+for i in step_range:
+    if PERIODIC_BOUNDARIES:
+        print("Step " + str(i + 1) + " of " + str(NUM_CELLS))
+    else:
+        print("Step " + str(i - DISTANCE + 1) + " of " + str(NUM_CELLS - 2 * DISTANCE))
+    s_operator = builder(i, LOWERING_OPERATOR) + builder(i, RISING_OPERATOR)
+    big_n_operator = recursive_big_n_calculator(i, -DISTANCE, 0)
+    hamiltonian += np.matmul(s_operator, big_n_operator)
 
 print("Building U...")
 t = np.pi / 2.
