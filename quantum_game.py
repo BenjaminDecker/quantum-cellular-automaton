@@ -1,6 +1,11 @@
+from cmath import sqrt
 import numpy as np
 from scipy.linalg import expm
 import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import random
 
 ###Simulation parameters###
 #number of cells
@@ -12,14 +17,14 @@ RULE = range(2, 4)
 #time steps to simulate until the program exits
 NUM_STEPS = 200
 #data type for real numbers
-DTYPE = np.float32
+DTYPE = np.float64
 #True means periodic boundary conditions, False means constant boundary conditions
 PERIODIC_BOUNDARIES = False
 
 ###Constants, do not change###
 KET_0 = np.array([1., 0.])
 KET_1 = np.array([0., 1.])
-KET_PLUS = np.array([1., 1.]) * (1 / np.sqrt(2))
+KET_PLUS = np.array([1., 1.]) / np.sqrt(2)
 SIZE = 2**NUM_CELLS
 SHAPE = [ NUM_CELLS, SIZE, SIZE ]
 LOWERING_OPERATOR = np.array([[0., 1.], [0., 0.]])
@@ -27,17 +32,56 @@ RISING_OPERATOR = np.array([[0., 0.], [1., 0.]])
 PROJECTION_KET_0 = np.array([[1., 0.], [0., 0.]])
 PROJECTION_KET_1 = np.array([[0., 0.], [0., 1.]])
 
+def Rx_gate(theta):
+    return np.array([
+        [np.cos(theta / 2), -1j * np.sin(theta / 2)],
+        [-1j * np.sin(theta / 2), np.cos(theta / 2)]])
+
 def blinker_state():
+    n = int((NUM_CELLS - 3) / 2)
     state = np.array([1.])
-    for i in range(3):
+    for i in range(n):
         state = np.kron(state, KET_0)
     state = np.kron(state, KET_1)
     state = np.kron(state, KET_0)
     state = np.kron(state, KET_1)
-    for i in range(3):
+    for i in range(n + 3, NUM_CELLS):
         state = np.kron(state, KET_0)
     return state
 
+def single_state():
+    n = int((NUM_CELLS - 1) / 2)
+    state = np.array([1.])
+    for i in range(n):
+        state = np.kron(state, KET_0)
+    state = np.kron(state, KET_1)
+    for i in range(n + 1, NUM_CELLS):
+        state = np.kron(state, KET_0)
+    return state
+
+def all_ket_1_state():
+    state = np.array([1.])
+    for i in range(NUM_CELLS):
+        state = np.kron(state, KET_1)
+    return state
+
+def equal_superposition_state():
+    state = np.array([1.])
+    for i in range(NUM_CELLS):
+        state = np.kron(state, KET_PLUS)
+    return state
+
+def gradient_state():
+    state = np.array([1.])
+    for i in range(NUM_CELLS):
+        state = np.kron(state, np.dot(Rx_gate(np.pi * i / (NUM_CELLS - 1)), KET_0))
+    return state
+
+def random_state(p):
+    state = np.array([1.])
+    for i in range(NUM_CELLS):
+        state = np.kron(state, KET_1 if random.random() > p else KET_0)
+    return state
 
 def empty():
     return np.empty(SHAPE, dtype=DTYPE)
@@ -121,14 +165,34 @@ print("Building U...")
 t = np.pi / 2.
 U = expm(-(1j) * t * hamiltonian)
 
-state_vector = blinker_state()
-heatmap = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
+state_vectors = [
+    blinker_state(),
+    single_state(),
+    random_state(.5),
+    gradient_state()]
 
-for i in range(NUM_STEPS):
-    for j in range(NUM_CELLS):
-        heatmap[i, j] = np.dot(state_vector.conj().T, np.dot(alive_small_n_operators[j], state_vector)).real
-    state_vector = np.dot(state_vector, U)
+# fig = make_subplots(rows=len(state_vectors))
 
-fig = px.imshow(heatmap)
-fig.write_html("quantum_blinker.html")
-fig.show()
+for index, state_vector in enumerate(state_vectors):
+    fig = make_subplots(rows=2)
+    population = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
+    d_population = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
+
+    for i in range(NUM_STEPS):
+        for j in range(NUM_CELLS):
+            pop_value = np.dot(state_vector.conj().T, np.dot(alive_small_n_operators[j], state_vector)).real
+            population[i, j] = pop_value
+            d_population[i, j] = round(pop_value)
+        state_vector = np.dot(state_vector, U)
+
+    fig.add_trace(go.Heatmap(z=population.T, coloraxis = "coloraxis"), 1, 1)
+    fig.update_yaxes(scaleanchor = ("x1"), row=1)
+
+    fig.add_trace(go.Heatmap(z=d_population.T, coloraxis = "coloraxis"), 2, 1)
+    fig.update_yaxes(scaleanchor = ("x2"), row=2)
+
+    fig.update_layout(coloraxis = {'colorscale':'magma'})
+
+    fig.show()
+    # fig.write_html("plot" + str(index) + ".html")
+
