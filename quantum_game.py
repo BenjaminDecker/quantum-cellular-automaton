@@ -1,25 +1,24 @@
-from cmath import sqrt
 import numpy as np
 from scipy.linalg import expm
-import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 import random
 
 ###Simulation parameters###
 #number of cells
 NUM_CELLS = 9
 #distance to look for alive or dead neighbours
-DISTANCE = 2
+DISTANCE = 1
 #number of alive neighbours required for a flip (range(2,4) means either 2 or 3 alive neighbours are required)
-RULE = range(2, 4)
+RULE = range(1, 2)
 #time steps to simulate until the program exits
-NUM_STEPS = 200
+NUM_STEPS = 500
 #data type for real numbers
 DTYPE = np.float64
 #True means periodic boundary conditions, False means constant boundary conditions
 PERIODIC_BOUNDARIES = False
+#Size of one time step in the heatmap. A time step size of 1 means one time step per cell
+TIME_STEP_SIZE = .1
 
 ###Constants, do not change###
 KET_0 = np.array([1., 0.])
@@ -71,16 +70,31 @@ def equal_superposition_state():
         state = np.kron(state, KET_PLUS)
     return state
 
-def gradient_state():
+def gradient_state(reversed=False):
     state = np.array([1.])
-    for i in range(NUM_CELLS):
+    for i in range(NUM_CELLS-1,-1,-1) if reversed else range(NUM_CELLS):
         state = np.kron(state, np.dot(Rx_gate(np.pi * i / (NUM_CELLS - 1)), KET_0))
     return state
 
-def random_state(p):
+def random_state(p=.5):
     state = np.array([1.])
     for i in range(NUM_CELLS):
         state = np.kron(state, KET_1 if random.random() > p else KET_0)
+    return state
+
+def snake_state():
+    n = int((NUM_CELLS - 6) / 2)
+    state = np.array([1.])
+    for i in range(n):
+        state = np.kron(state, KET_0)
+    state = np.kron(state, KET_1)
+    state = np.kron(state, KET_1)
+    state = np.kron(state, KET_0)
+    state = np.kron(state, KET_0)
+    state = np.kron(state, KET_1)
+    state = np.kron(state, KET_1)
+    for i in range(n + 6, NUM_CELLS):
+        state = np.kron(state, KET_0)
     return state
 
 def empty():
@@ -162,16 +176,13 @@ for i in step_range:
     hamiltonian += np.matmul(s_operator, big_n_operator)
 
 print("Building U...")
-t = np.pi / 2.
+t = (np.pi / 2) * TIME_STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
 state_vectors = [
     blinker_state(),
     single_state(),
-    random_state(.5),
-    gradient_state()]
-
-# fig = make_subplots(rows=len(state_vectors))
+    gradient_state(reversed=True)]
 
 for index, state_vector in enumerate(state_vectors):
     fig = make_subplots(rows=2)
