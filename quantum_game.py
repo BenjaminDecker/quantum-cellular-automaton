@@ -1,113 +1,10 @@
 import numpy as np
-from scipy.linalg import expm
+from scipy.linalg import expm, logm
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-import random
-
-###Simulation parameters###
-#number of cells
-NUM_CELLS = 9
-#distance to look for alive or dead neighbours
-DISTANCE = 1
-#number of alive neighbours required for a flip (range(2,4) means either 2 or 3 alive neighbours are required)
-RULE = range(1, 2)
-#time steps to simulate until the program exits
-NUM_STEPS = 500
-#data type for real numbers
-DTYPE = np.float64
-#True means periodic boundary conditions, False means constant boundary conditions
-PERIODIC_BOUNDARIES = False
-#Size of one time step in the heatmap. A time step size of 1 means one time step per cell
-TIME_STEP_SIZE = .1
-
-###Constants, do not change###
-KET_0 = np.array([1., 0.])
-KET_1 = np.array([0., 1.])
-KET_PLUS = np.array([1., 1.]) / np.sqrt(2)
-SIZE = 2**NUM_CELLS
-SHAPE = [ NUM_CELLS, SIZE, SIZE ]
-LOWERING_OPERATOR = np.array([[0., 1.], [0., 0.]])
-RISING_OPERATOR = np.array([[0., 0.], [1., 0.]])
-PROJECTION_KET_0 = np.array([[1., 0.], [0., 0.]])
-PROJECTION_KET_1 = np.array([[0., 0.], [0., 1.]])
-
-def Rx_gate(theta):
-    return np.array([
-        [np.cos(theta / 2), -1j * np.sin(theta / 2)],
-        [-1j * np.sin(theta / 2), np.cos(theta / 2)]])
-
-def blinker_state():
-    n = int((NUM_CELLS - 3) / 2)
-    state = np.array([1.])
-    for i in range(n):
-        state = np.kron(state, KET_0)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_0)
-    state = np.kron(state, KET_1)
-    for i in range(n + 3, NUM_CELLS):
-        state = np.kron(state, KET_0)
-    return state
-
-def single_state():
-    n = int((NUM_CELLS - 1) / 2)
-    state = np.array([1.])
-    for i in range(n):
-        state = np.kron(state, KET_0)
-    state = np.kron(state, KET_1)
-    for i in range(n + 1, NUM_CELLS):
-        state = np.kron(state, KET_0)
-    return state
-
-def all_ket_1_state():
-    state = np.array([1.])
-    for i in range(NUM_CELLS):
-        state = np.kron(state, KET_1)
-    return state
-
-def equal_superposition_state():
-    state = np.array([1.])
-    for i in range(NUM_CELLS):
-        state = np.kron(state, KET_PLUS)
-    return state
-
-def gradient_state(reversed=False):
-    state = np.array([1.])
-    for i in range(NUM_CELLS-1,-1,-1) if reversed else range(NUM_CELLS):
-        state = np.kron(state, np.dot(Rx_gate(np.pi * i / (NUM_CELLS - 1)), KET_0))
-    return state
-
-def random_state(p=.5):
-    state = np.array([1.])
-    for i in range(NUM_CELLS):
-        state = np.kron(state, KET_1 if random.random() > p else KET_0)
-    return state
-
-def snake_state():
-    n = int((NUM_CELLS - 6) / 2)
-    state = np.array([1.])
-    for i in range(n):
-        state = np.kron(state, KET_0)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_0)
-    state = np.kron(state, KET_0)
-    state = np.kron(state, KET_1)
-    state = np.kron(state, KET_1)
-    for i in range(n + 6, NUM_CELLS):
-        state = np.kron(state, KET_0)
-    return state
-
-def empty():
-    return np.empty(SHAPE, dtype=DTYPE)
-
-def builder(index, matrix):
-    acc = np.array([1.])
-    for i in range(index):
-        acc = np.kron(acc, np.eye(2, dtype=DTYPE))
-    acc = np.kron(acc, matrix)
-    for i in range(index + 1, NUM_CELLS):
-        acc = np.kron(acc, np.eye(2, dtype=DTYPE))
-    return acc
+from parameters import *
+from constants import *
+from functions import *
 
 # print("Building lowering operators...")
 # lowering_operators = empty()
@@ -157,6 +54,9 @@ def recursive_big_n_calculator(index, offset, alive_count):
     alive = np.dot(alive_small_n_operators[(index + offset) % NUM_CELLS], recursive_big_n_calculator(index, offset + 1, alive_count + 1))
     return dead + alive
 
+def measure(state_vector, basis_state):
+    return np.vdot(state_vector, np.dot(alive_small_n_operators[basis_state], state_vector)).real
+
 # print("Building big N operators...")
 # big_n_operators = empty()
 # for i in range(DISTANCE, NUM_CELLS - DISTANCE):
@@ -165,8 +65,7 @@ def recursive_big_n_calculator(index, offset, alive_count):
 
 print("Building hamiltonian...")
 hamiltonian = np.zeros([SIZE, SIZE], dtype=DTYPE)
-step_range = range(NUM_CELLS) if PERIODIC_BOUNDARIES else range(DISTANCE, NUM_CELLS - DISTANCE)
-for i in step_range:
+for i in STEP_RANGE:
     if PERIODIC_BOUNDARIES:
         print("Step " + str(i + 1) + " of " + str(NUM_CELLS))
     else:
@@ -179,31 +78,82 @@ print("Building U...")
 t = (np.pi / 2) * TIME_STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
+reorder_gate = np.eye(SIZE)
+for i in range(NUM_CELLS - 1):
+    swap = np.kron(np.eye(2**i), np.kron(SWAP_GATE, np.eye(2**(NUM_CELLS - (i + 2)))))
+    reorder_gate = np.dot(swap, reorder_gate)
+
 state_vectors = [
-    blinker_state(),
-    single_state(),
-    gradient_state(reversed=True)]
+    # blinker_state(),
+    # single_state(),
+    random_state(),
+    random_state(),
+    random_state(),
+    random_state(),
+    # gradient_state(reversed=True),
+]
 
 for index, state_vector in enumerate(state_vectors):
-    fig = make_subplots(rows=2)
+    classical = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
     population = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
     d_population = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
+    single_site_entropy = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
+    # norm = np.empty([NUM_STEPS, 1], dtype=DTYPE)
+    # U_pow = np.eye(SIZE)
 
+    # ----------classical----------
+    for i in range(NUM_CELLS):
+        classical[:, i] = measure(state_vector, i)
+    
+    for i in range(1, NUM_STEPS):
+        for j in STEP_RANGE:
+            sum = 0
+            for offset in range (-DISTANCE, DISTANCE + 1):
+                sum += classical[i - 1, (j + offset) % NUM_CELLS]
+            if sum in RULE:
+                classical[i, j] = 0. if classical[i, j] == 1. else 1.
+            else:
+                classical[i, j] = classical[i - 1, j]
+    # ----------classical----------
+
+
+    #------------quantum-----------
     for i in range(NUM_STEPS):
         for j in range(NUM_CELLS):
-            pop_value = np.dot(state_vector.conj().T, np.dot(alive_small_n_operators[j], state_vector)).real
+            pop_value = measure(state_vector, 0)
             population[i, j] = pop_value
             d_population[i, j] = round(pop_value)
-        state_vector = np.dot(state_vector, U)
 
-    fig.add_trace(go.Heatmap(z=population.T, coloraxis = "coloraxis"), 1, 1)
-    fig.update_yaxes(scaleanchor = ("x1"), row=1)
+            density_matrix = np.outer(state_vector, state_vector.conj())
+            partial_trace = np.trace(density_matrix.reshape(2, 2**(NUM_CELLS -1), 2, 2**(NUM_CELLS -1)), axis1=1, axis2=3)
+            single_site_entropy[i, j] = (-np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
 
-    fig.add_trace(go.Heatmap(z=d_population.T, coloraxis = "coloraxis"), 2, 1)
-    fig.update_yaxes(scaleanchor = ("x2"), row=2)
+            state_vector = np.dot(reorder_gate, state_vector)
+
+        # norm[i, 0] = np.linalg.norm(np.eye(SIZE) - U_pow, 2) / 2
+        # print(norm[i, 0])
+        # U_pow = np.matmul(U, U_pow)
+
+        state_vector = np.dot(U, state_vector)
+    #------------quantum-----------
+
+    #----------visualization-------
+    heatmaps = [
+        classical,
+        population,
+        d_population,
+        single_site_entropy,
+        # norm,
+    ]
+
+    fig = make_subplots(rows=len(heatmaps))
+
+    for index, heatmap in enumerate(heatmaps):
+        fig.add_trace(go.Heatmap(z=heatmap.T, coloraxis = "coloraxis"), index + 1, 1)
+        fig.update_yaxes(scaleanchor = ("x" + str(index + 1)), row=(index + 1))
 
     fig.update_layout(coloraxis = {'colorscale':'magma'})
 
     fig.show()
     # fig.write_html("plot" + str(index) + ".html")
-
+    #----------visualization-------
