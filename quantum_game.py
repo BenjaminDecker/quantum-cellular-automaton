@@ -84,12 +84,16 @@ for i in range(NUM_CELLS - 1):
     reorder_gate = np.dot(swap, reorder_gate)
 
 state_vectors = [
-    # blinker_state(),
+    # blinker_state(width=1),
+    triple_blinker(),
     # single_state(),
-    random_state(),
-    random_state(),
-    random_state(),
-    random_state(),
+    # all_ket_1_state(),
+    # all_ket_1_but_outer(),
+    # equal_superposition_state_but_outer(),
+    # random_state(.2),
+    # random_state(.2),
+    # random_state(.2),
+    # random_state(.2),
     # gradient_state(reversed=True),
 ]
 
@@ -109,17 +113,18 @@ for index, state_vector in enumerate(state_vectors):
         for j in STEP_RANGE:
             sum = 0
             for offset in range (-DISTANCE, DISTANCE + 1):
-                sum += classical[i - 1, (j + offset) % NUM_CELLS]
+                if offset != 0:
+                    sum += classical[i - 1, (j + offset) % NUM_CELLS]
             if sum in RULE:
-                classical[i, j] = 0. if classical[i, j] == 1. else 1.
+                classical[i, j] = 0. if classical[i - 1, j] == 1. else 1.
             else:
                 classical[i, j] = classical[i - 1, j]
     # ----------classical----------
 
-
     #------------quantum-----------
     for i in range(NUM_STEPS):
         for j in range(NUM_CELLS):
+            print("i:" + str(i) + " j:" + str(j))
             pop_value = measure(state_vector, 0)
             population[i, j] = pop_value
             d_population[i, j] = round(pop_value)
@@ -152,8 +157,9 @@ for index, state_vector in enumerate(state_vectors):
         fig.add_trace(go.Heatmap(z=heatmap.T, coloraxis = "coloraxis"), index + 1, 1)
         fig.update_yaxes(scaleanchor = ("x" + str(index + 1)), row=(index + 1))
 
-    fig.update_layout(coloraxis = {'colorscale':'magma'})
+    fig.update_layout(coloraxis = {'colorscale':'inferno', 'cmax':1.0, 'cmin':0.0})
 
     fig.show()
+    # fig.write_image("test.eps")
     # fig.write_html("plot" + str(index) + ".html")
     #----------visualization-------
