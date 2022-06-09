@@ -31,14 +31,14 @@
 \institute[]{Technical University of Munich}
 \date{9. June 2022}
 
-\newcommand{\hamiltonianPaper}{\hat{H}=\sum_{i=3}^{L - 2}\hat{S}_i\left(\hat{N}_i^{(2)} + \hat{N}_i^{(3)}\right)}
+\newcommand{\hamiltonianPaper}{\hat{H}=\sum_{i=3}^{L-2}\hat{S}_i\left(\hat{N}_i^{(2)} + \hat{N}_i^{(3)}\right)}
 \newcommand{\unitary}{\hat{U}(t)=e^{-\mathrm{i}\hat{H}t}}
-\newcommand{\timeEvolution}{\ket{\psi}_t=\hat{U}(t)\ket{\psi}_0}
+\newcommand{\timeEvolution}{\ket{\psi}_t=\hat{U} (t)\ket{\psi}_0}
 \newcommand{\timeStepEvolution}{\ket{\psi}_k=\left(\hat{U}\left(\frac{\pi}{2}\right)\right)^k\ket{\psi}_0}
 \newcommand{\singleTimeStepEvolution}{\ket{\psi}_{k+1}=\hat{U}\left(\frac{\pi}{2}\right)\ket{\psi}_k}
 \newcommand{\variableSingleTimeStepEvolution}{\ket{\psi}_{k+1}=\hat{U}\left(t\right)\ket{\psi}_k}
 \newcommand{\hamiltonianGeneral}{\hat{H}=\sum_{i}\hat{S}_i\left(\hat{N}_i\right)}
-\newcommand{\vonNeumannEntropy}{S(\rho_A) = -Tr(\rho_Alog_2(\rho_A))}
+\newcommand{\vonNeumannEntropy}{S(\rho_A) = -Tr (\rho_Alog_2(\rho_A))}
 \newcommand{\projdown}{\hat{\bar{n}}}
 \newcommand{\projup}{\hat{n}}
 
@@ -161,7 +161,7 @@
     \only<9->{
     \vspace{15pt}
     \begin{center}
-        For an initial state $\ket{\psi}_0$ and the unitary time evolution operator $\hat{U}(k)$, the state after $k$ time steps is given by
+        For an initial state $\ket{\psi}_0$ and a unitary time evolution operator $\hat{U}(k)$, the state after $k$ time steps is given by
     \end{center}
     \vspace{10pt}
     \begin{equation*}
@@ -302,12 +302,20 @@
     \only<2>{
     \begin{figure}
         \centering
+        \includegraphics[width=\textwidth]{graphics/not_interesting_f12.png}
+        \caption{Time evolution of the initial state $\ket{\psi}_0=\ket{0}^{\otimes3}\otimes\ket{1001}\otimes\ket{0}^{\otimes4}$ according to equation (\ref{eq:singleTimeStepEvolution}) shown as the distribution of alive cells}
+        \label{fig:notinteresting}
+    \end{figure}
+    }%
+    \only<3>{
+    \begin{figure}
+        \centering
         \includegraphics[width=\textwidth]{graphics/blinker.png}
         \caption{Time evolution of the initial state $\ket{\psi}_0=\ket{0}^{\otimes4}\otimes\ket{101}\otimes\ket{0}^{\otimes4}$ according to equation (\ref{eq:singleTimeStepEvolution}) shown as the distribution of alive cells}
         \label{fig:blinker}
     \end{figure}
-    }
-    \only<3>{
+    }%
+    \only<4>{
     \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{graphics/wide_blinker.png}
@@ -403,38 +411,6 @@
     \vspace{1000pt}
 \end{frame}
 
-\begin{frame}{Wolfram Code}
-    \begin{center}
-        A naming system to define the rules of a cellular automaton
-    \end{center}
-    \vspace{10pt}
-    \onslide<2->{
-    \begin{center}
-        Rule $150$:\\"A cell is flipped if the number of alive cells among its nearest neighbors is $1$"
-    \end{center}
-    }
-    \vspace{2pt}
-    \onslide<3->{
-    \begin{center}
-        \begin{tabular}{ c c c c c c c c }
-         1 {\color{red}1} 1 & 1 {\color{TUM-blue}1} 0 & 1 {\color{red}0} 1 & 1 {\color{TUM-blue}0} 0 & 0 {\color{TUM-blue}1} 1 & 0 {\color{red}1} 0 & 0 {\color{TUM-blue}0} 1 & 0 {\color{red}0} 0 \\
-         {\color{red}1} & {\color{TUM-blue}0} & {\color{red}0} & {\color{TUM-blue}1} & {\color{TUM-blue}0} & {\color{red}1} & {\color{TUM-blue}1} & {\color{red}0}
-        \end{tabular}
-    \end{center}
-    }
-    \vspace{2pt}
-    \onslide<4->{
-    \begin{center}
-        The corresponding wolfram code for this rule is $10010110b=\textbf{150}$
-    \end{center}
-    }
-    \onslide<5->{
-    \begin{center}
-        The wolfram code for rule-$F_{12}$ is $2266898040$
-    \end{center}
-    }
-\end{frame}
-
 \begin{frame}[t]{Changing the rules}
     \begin{equation}
         \hamiltonianPaper
@@ -469,6 +445,9 @@
         \hamiltonianGeneral
         \tag{\ref{eq:hamiltonianGeneral}}
     \end{equation}
+    \begin{center}
+        "A cell is flipped if the number of alive cells among its nearest neighbors is $1$"
+    \end{center}
     \only<2>{
     \begin{figure}
     \begin{columns}
@@ -483,7 +462,7 @@
     \end{columns}
     \caption{Time evolution of the initial state $\ket{\psi}_0=\ket{0}^{\otimes4}\otimes\ket{101}\otimes\ket{0}^{\otimes4}$ according to rule $F_{12}$ (left) and rule $150$ (right) shown as the distribution of alive cells (top) and single site entropy (bottom)}
     \end{figure}
-    }
+    }%
     \only<3>{
     \begin{figure}
     \begin{columns}
@@ -498,7 +477,7 @@
     \end{columns}
     \caption{Time evolution of the initial state $\ket{\psi}_0=\ket{0}^{\otimes5}\otimes\ket{1}\otimes\ket{0}^{\otimes5}$ according to rule $F_{12}$ (left) and rule $150$ (right) shown as the distribution of alive cells (top) and single site entropy (bottom)}
     \end{figure}
-    }
+    }%
     \only<4>{
     \begin{figure}
     \centering
@@ -593,6 +572,75 @@
     \end{figure}
     }
     \end{columns}
+    }
+\end{frame}
+
+\bgroup
+\setbeamercolor{background canvas}{bg=black}
+\begin{frame}[plain, noframenumbering]{}
+\end{frame}
+\egroup
+
+\begin{frame}[noframenumbering]{Desciption for plots in slide "The Quantum Game of Life"}
+    \only<1>{
+    \begin{itemize}
+        \item Classical: The time evolution corresponding to a classical cellular automaton
+        \item Quantum: The time evolution of the distribution of alive cells
+        \item Rounded: The rounded version of "Quantum"
+        \item single site entropy: The time evolution of the single site entropy
+    \end{itemize}
+    }
+    \only<2>{
+    \begin{center}
+        Plots in order:
+    \end{center}
+    \begin{itemize}
+        \item rule: $f_{12}$, $t=\frac{\pi}{2}$, $\ket{\psi}_0 = \ket{0}^{\otimes 4}\otimes \ket{101}\otimes \ket{0}^{\otimes 4}$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{2}$, $\ket{\psi}_0 = \ket{0}^{\otimes 4}\otimes \ket{101}\otimes \ket{0}^{\otimes 4}$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{2}$, $\ket{\psi}_0 = \ket{0}^{\otimes 5}\otimes \ket{1}\otimes \ket{0}^{\otimes 5}$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{2}$, $\ket{\psi}_0 = \ket{0}^{\otimes 3}\otimes \ket{10101}\otimes \ket{0}^{\otimes 3}$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{2}$, $\ket{\psi}_0 = \ket{0}\otimes \ket{1}^{\otimes 9}\otimes \ket{0}$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{2}$, $\ket{\psi}_0=\bigotimes_{k = 0}^{N - 1}\left[R_x\left(\pi\frac{k}{N - 1}\right)\ket{1}\right]$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{10}$, $\ket{\psi}_0=\bigotimes_{k = 0}^{N - 1}\left[R_x\left(\pi\frac{k}{N - 1}\right)\ket{1}\right]$, start time step $k=0$
+        \item rule: $150$, $t=\frac{\pi}{2}$, $\ket{\psi}_0=\bigotimes_{k = 0}^{N - 1}\left[R_x\left(\pi\frac{k}{N - 1}\right)\ket{1}\right]$, start time step $k=70$
+        \item rule: $150$, $t=\frac{\pi}{10}$, $\ket{\psi}_0=\bigotimes_{k = 0}^{N - 1}\left[R_x\left(\pi\frac{k}{N - 1}\right)\ket{1}\right]$, start time step $k=70$
+    \end{itemize}
+    }
+\end{frame}
+
+\begin{frame}[noframenumbering]{Wolfram Code}
+
+\end{frame}
+
+\begin{frame}[noframenumbering]{Wolfram Code}
+    \begin{center}
+        A naming system to define the rules of a cellular automaton
+    \end{center}
+    \vspace{10pt}
+    \onslide<2->{
+    \begin{center}
+        Rule $150$:\\"A cell is flipped if the number of alive cells among its nearest neighbors is $1$"
+    \end{center}
+    }
+    \vspace{2pt}
+    \onslide<3->{
+    \begin{center}
+        \begin{tabular}{ c c c c c c c c }
+         1 {\color{red}1} 1 & 1 {\color{TUM-blue}1} 0 & 1 {\color{red}0} 1 & 1 {\color{TUM-blue}0} 0 & 0 {\color{TUM-blue}1} 1 & 0 {\color{red}1} 0 & 0 {\color{TUM-blue}0} 1 & 0 {\color{red}0} 0 \\
+         {\color{red}1} & {\color{TUM-blue}0} & {\color{red}0} & {\color{TUM-blue}1} & {\color{TUM-blue}0} & {\color{red}1} & {\color{TUM-blue}1} & {\color{red}0}
+        \end{tabular}
+    \end{center}
+    }
+    \vspace{2pt}
+    \onslide<4->{
+    \begin{center}
+        The corresponding wolfram code for this rule is $10010110b=\textbf{150}$
+    \end{center}
+    }
+    \onslide<5->{
+    \begin{center}
+        The wolfram code for rule-$F_{12}$ is $2266898040$
+    \end{center}
     }
 \end{frame}
 
