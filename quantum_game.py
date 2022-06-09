@@ -85,16 +85,17 @@ for i in range(NUM_CELLS - 1):
 
 state_vectors = [
     # blinker_state(width=1),
-    triple_blinker(),
-    # single_state(),
+    # triple_blinker(),
+    single_state(),
+    single_state(1),
     # all_ket_1_state(),
     # all_ket_1_but_outer(),
     # equal_superposition_state_but_outer(),
-    # random_state(.2),
-    # random_state(.2),
-    # random_state(.2),
-    # random_state(.2),
     # gradient_state(reversed=True),
+    # random_state(.2),
+    # random_state(.2),
+    # random_state(.2),
+    # random_state(.2),
 ]
 
 for index, state_vector in enumerate(state_vectors):
@@ -161,5 +162,5 @@ for index, state_vector in enumerate(state_vectors):
 
     fig.show()
     # fig.write_image("test.eps")
-    # fig.write_html("plot" + str(index) + ".html")
+    fig.write_html("plot" + str(index) + ".html")
     #----------visualization-------
