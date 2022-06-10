@@ -8,5 +8,5 @@ Set your parameters in parameters.py
 Run the code with
 
 ```bash
-python quantum-game.py
+$ python quantum-game.py
 ```
