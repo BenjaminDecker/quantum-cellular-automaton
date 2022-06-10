@@ -6,6 +6,21 @@ from parameters import *
 from constants import *
 from functions import *
 
+state_vectors = [
+    blinker_state(width=1),
+    triple_blinker(),
+    single_state(),
+    single_state(position=1),
+    # all_ket_1_state(),
+    all_ket_1_but_outer(),
+    # equal_superposition_state_but_outer(),
+    gradient_state(reversed=True),
+    # random_state(.2),
+    # random_state(.2),
+    # random_state(.2),
+    # random_state(.2),
+]
+
 # print("Building lowering operators...")
 # lowering_operators = empty()
 # for i in range(NUM_CELLS):
@@ -83,22 +98,8 @@ for i in range(NUM_CELLS - 1):
     swap = np.kron(np.eye(2**i), np.kron(SWAP_GATE, np.eye(2**(NUM_CELLS - (i + 2)))))
     reorder_gate = np.dot(swap, reorder_gate)
 
-state_vectors = [
-    # blinker_state(width=1),
-    # triple_blinker(),
-    single_state(),
-    single_state(1),
-    # all_ket_1_state(),
-    # all_ket_1_but_outer(),
-    # equal_superposition_state_but_outer(),
-    # gradient_state(reversed=True),
-    # random_state(.2),
-    # random_state(.2),
-    # random_state(.2),
-    # random_state(.2),
-]
-
-for index, state_vector in enumerate(state_vectors):
+for state_index, state_vector in enumerate(state_vectors):
+    print("Calculating state " + str(state_index))
     classical = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
     population = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
     d_population = np.empty([NUM_STEPS, NUM_CELLS], dtype=DTYPE)
@@ -125,7 +126,6 @@ for index, state_vector in enumerate(state_vectors):
     #------------quantum-----------
     for i in range(NUM_STEPS):
         for j in range(NUM_CELLS):
-            print("i:" + str(i) + " j:" + str(j))
             pop_value = measure(state_vector, 0)
             population[i, j] = pop_value
             d_population[i, j] = round(pop_value)
@@ -160,7 +160,8 @@ for index, state_vector in enumerate(state_vectors):
 
     fig.update_layout(coloraxis = {'colorscale':'inferno', 'cmax':1.0, 'cmin':0.0})
 
-    fig.show()
+    # fig.show()
     # fig.write_image("test.eps")
-    fig.write_html("plot" + str(index) + ".html")
+    print(state_index)
+    fig.write_html("plot" + str(state_index) + ".html")
     #----------visualization-------

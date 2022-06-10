@@ -35,12 +35,12 @@ def triple_blinker():
         state = np.kron(state, KET_0)
     return state
 
-def single_state(n = int((NUM_CELLS - 1) / 2)):
+def single_state(position = int((NUM_CELLS - 1) / 2)):
     state = np.array([1.])
-    for i in range(n):
+    for i in range(position):
         state = np.kron(state, KET_0)
     state = np.kron(state, KET_1)
-    for i in range(n + 1, NUM_CELLS):
+    for i in range(position + 1, NUM_CELLS):
         state = np.kron(state, KET_0)
     return state
 
