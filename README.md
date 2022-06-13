@@ -1,4 +1,4 @@
-# quantum-seminar
+# quantum-cellular-automaton
 
 A classical simulation of the quantum game of life.
 
