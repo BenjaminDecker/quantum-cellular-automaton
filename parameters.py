@@ -30,6 +30,10 @@ parser.add_argument('--periodic', dest='PERIODIC_BOUNDARIES', action='store_cons
                     help="Use periodic boundary conditions instead of constant boundary conditions")
 parser.add_argument('--dtype', dest='DTYPE', default="float32",
                     choices=["float16", "float32", "float64", "float128"])
+parser.add_argument('--show', dest='SHOW', action='store_const', const=False, default=True,
+                    help="Show the output heatmaps immediately")
+parser.add_argument('--write', dest='WRITE', action='store_const', const=False, default=True,
+                    help="Write the heapmaps to html files")
 
 args = parser.parse_args()
 args.DTYPE = eval("np." + args.DTYPE)

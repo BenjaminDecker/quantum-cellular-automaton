@@ -61,7 +61,7 @@ def measure(state_vector, basis_state):
 step_range = range(args.NUM_CELLS) if args.PERIODIC_BOUNDARIES else range(
     args.DISTANCE, args.NUM_CELLS - args.DISTANCE)
 
-print("Building hamiltonian...")
+print("Building Hamiltonian...")
 hamiltonian = np.zeros([DIM, DIM], dtype=args.DTYPE)
 for i in step_range:
     if args.PERIODIC_BOUNDARIES:
@@ -74,7 +74,7 @@ for i in step_range:
     big_n_operator = recursive_big_n_calculator(i, -args.DISTANCE, 0)
     hamiltonian += np.matmul(s_operator, big_n_operator)
 
-print("Building U...")
+print("Building unitary time evolution operator...")
 t = (np.pi / 2) * args.STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
@@ -139,6 +139,9 @@ for state_index, state_vector in enumerate(state_vectors):
     fig.update_layout(
         coloraxis={'colorscale': 'inferno', 'cmax': 1.0, 'cmin': 0.0})
 
-    fig.show()
-    fig.write_html("plot" + str(state_index) + ".html")
+    if args.SHOW:
+        fig.show()
+    
+    if args.WRITE:
+        fig.write_html("plot" + str(state_index) + ".html")
     # ----------visualization-------
