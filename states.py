@@ -5,7 +5,7 @@ from gates import Rx_gate
 from parameters import args
 
 
-def blinker_state(width=1):
+def blinker(width=1):
     n = int((args.NUM_CELLS - (2 + width)) / 2)
     state = np.array([1.])
     for i in range(n):
@@ -34,7 +34,7 @@ def triple_blinker():
     return state
 
 
-def single_state(position=int((args.NUM_CELLS - 1) / 2)):
+def single(position=int((args.NUM_CELLS - 1) / 2)):
     state = np.array([1.])
     for i in range(position):
         state = np.kron(state, KET_0)
@@ -44,7 +44,11 @@ def single_state(position=int((args.NUM_CELLS - 1) / 2)):
     return state
 
 
-def all_ket_1_state():
+def single_bottom():
+    return single(args.DISTANCE)
+
+
+def all_ket_1():
     state = np.array([1.])
     for i in range(args.NUM_CELLS):
         state = np.kron(state, KET_1)
@@ -62,14 +66,14 @@ def all_ket_1_but_outer():
     return state
 
 
-def equal_superposition_state():
+def equal_superposition():
     state = np.array([1.])
     for i in range(args.NUM_CELLS):
         state = np.kron(state, KET_PLUS)
     return state
 
 
-def equal_superposition_state_but_outer():
+def equal_superposition_but_outer():
     state = np.array([1.])
     for i in range(args.DISTANCE):
         state = np.kron(state, KET_0)
@@ -80,7 +84,7 @@ def equal_superposition_state_but_outer():
     return state
 
 
-def gradient_state(reversed=False):
+def gradient(reversed=False):
     state = np.array([1.])
     for i in range(args.NUM_CELLS):
         state = np.kron(state, np.dot(
@@ -88,14 +92,14 @@ def gradient_state(reversed=False):
     return state
 
 
-def random_state(p=.5):
+def rand(p=.5):
     state = np.array([1.])
     for i in range(args.NUM_CELLS):
-        state = np.kron(state, KET_0 if random.random() > p else KET_1)
+        state = np.kron(state, KET_0 if random() > p else KET_1)
     return state
 
 
-def snake_state():
+def snake():
     n = int((args.NUM_CELLS - 6) / 2)
     state = np.array([1.])
     for i in range(n):

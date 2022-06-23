@@ -8,22 +8,6 @@ import builders
 from constants import DIM
 from gates import PROJECTION_KET_0, PROJECTION_KET_1, LOWERING_OPERATOR, RISING_OPERATOR, REORDER_ROTATE_GATE
 
-# Choose which state vectors you want. All options are defined in functions.py
-state_vectors = [
-    states.blinker_state(width=1),
-    # triple_blinker(),
-    # single_state(),
-    # single_state(position=1),
-    # all_ket_1_state(),
-    # all_ket_1_but_outer(),
-    # equal_superposition_state_but_outer(),
-    # gradient_state(reversed=True),
-    # random_state(.2),
-    # random_state(.2),
-    # random_state(.2),
-    # random_state(.2),
-]
-
 print("Building dead small n operators...")
 dead_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
@@ -78,7 +62,7 @@ print("Building unitary time evolution operator...")
 t = (np.pi / 2) * args.STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
-for state_index, state_vector in enumerate(state_vectors):
+for state_index, state_vector in enumerate(args.STATE_VECTORS):
     print("Calculating state " + str(state_index))
     classical = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
@@ -141,7 +125,7 @@ for state_index, state_vector in enumerate(state_vectors):
 
     if args.SHOW:
         fig.show()
-    
+
     if args.WRITE:
         fig.write_html("plot" + str(state_index) + ".html")
     # ----------visualization-------
