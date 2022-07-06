@@ -9,12 +9,12 @@ from constants import DIM
 from gates import PROJECTION_KET_0, PROJECTION_KET_1, LOWERING_OPERATOR, RISING_OPERATOR, REORDER_ROTATE_GATE
 import warnings
 
-print("Building dead small n operators...")
+print("\nBuilding ket 0 projection operators...")
 dead_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
     dead_small_n_operators[i] = builders.builder(i, PROJECTION_KET_0)
 
-print("Building alive small n operators...")
+print("\nBuilding ket 1 projection operators...")
 alive_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
     alive_small_n_operators[i] = builders.builder(i, PROJECTION_KET_1)
@@ -46,7 +46,7 @@ def measure(state_vector, basis_state):
 step_range = range(args.NUM_CELLS) if args.PERIODIC_BOUNDARIES else range(
     args.DISTANCE, args.NUM_CELLS - args.DISTANCE)
 
-print("Building Hamiltonian...")
+print("\nBuilding Hamiltonian...")
 hamiltonian = np.zeros([DIM, DIM], dtype=args.DTYPE)
 for i in step_range:
     if args.PERIODIC_BOUNDARIES:
@@ -59,12 +59,12 @@ for i in step_range:
     big_n_operator = recursive_big_n_calculator(i, -args.DISTANCE, 0)
     hamiltonian += np.matmul(s_operator, big_n_operator)
 
-print("Building unitary time evolution operator...")
+print("\nCalculating unitary time evolution operator...")
 t = (np.pi / 2) * args.STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
 for state_index, state_vector in enumerate(args.STATE_VECTORS):
-    print("Calculating state " + str(state_index))
+    print("\nSimulating state " + str(state_index))
     classical = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     d_population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
