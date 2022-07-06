@@ -1,16 +1,17 @@
 # quantum-cellular-automaton
 
-A classical simulation of the quantum game of life
+## A classical simulation of the quantum game of life
 
 ![](plot.png)
 
-## Usage
+## Requirements
 Install dependencies with
 ```bash
 pip install -r requirements.txt
 ```
 
 
+## Usage
 List all available parameters with
 ```bash
 python quantum-game.py --help
