@@ -9,12 +9,10 @@ from constants import DIM
 from gates import PROJECTION_KET_0, PROJECTION_KET_1, LOWERING_OPERATOR, RISING_OPERATOR, REORDER_ROTATE_GATE
 import warnings
 
-print("\nBuilding ket 0 projection operators...")
+print("Building projection operators...")
 dead_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
     dead_small_n_operators[i] = builders.builder(i, PROJECTION_KET_0)
-
-print("\nBuilding ket 1 projection operators...")
 alive_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
     alive_small_n_operators[i] = builders.builder(i, PROJECTION_KET_1)
