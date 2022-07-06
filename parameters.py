@@ -21,6 +21,8 @@ parser.add_argument('--show', dest='SHOW', action='store_true',
                     help="Show the output heatmaps immediately")
 parser.add_argument('--file-prefix', dest='PREFIX',
                     help="If given, write to files with specified filename-prefix")
+parser.add_argument('--no-sse', dest='NOSSE', action='store_true',
+                    help="Do not calculate and plot the single site entrpy (Speeds up simulation significantly)")
 parser.add_argument('--initial_states', dest='STATE_VECTORS', nargs='*', default=['blinker'],
                     choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_1", "all_ket_1_but_outer",
                              "equal_superposition", "equal_superposition_but_outer", "gradient", "rand", "snake"],

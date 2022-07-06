@@ -90,19 +90,27 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
         if i % 10 == 0:
             print("Step " + str(i) + " of " + str(args.NUM_STEPS))
         for j in range(args.NUM_CELLS):
-            pop_value = measure(state_vector, 0)
-            population[i, j] = pop_value
-            d_population[i, j] = round(pop_value)
+            if args.NOSSE:
+                # If the single-site-entropy is not calculated, part of computation is unnecessary
+                pop_value = measure(state_vector, j)
+                population[i, j] = pop_value
+                d_population[i, j] = round(pop_value)
+            else:
+                pop_value = measure(state_vector, 0)
+                population[i, j] = pop_value
+                d_population[i, j] = round(pop_value)
 
-            density_matrix = np.outer(state_vector, state_vector.conj())
-            partial_trace = np.trace(density_matrix.reshape(
-                2, 2**(args.NUM_CELLS - 1), 2, 2**(args.NUM_CELLS - 1)), axis1=1, axis2=3)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                single_site_entropy[i, j] = (
-                    -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
+                if not args.NOSSE:
+                    density_matrix = np.outer(
+                        state_vector, state_vector.conj())
+                    partial_trace = np.trace(density_matrix.reshape(
+                        2, 2**(args.NUM_CELLS - 1), 2, 2**(args.NUM_CELLS - 1)), axis1=1, axis2=3)
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        single_site_entropy[i, j] = (
+                            -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
 
-            state_vector = np.dot(REORDER_ROTATE_GATE, state_vector)
+                state_vector = np.dot(REORDER_ROTATE_GATE, state_vector)
 
         state_vector = np.dot(U, state_vector)
     # ------------quantum-----------
@@ -113,8 +121,9 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
         classical,
         population,
         d_population,
-        single_site_entropy,
     ]
+    if not args.NOSSE:
+        heatmaps.append(single_site_entropy)
 
     fig = make_subplots(rows=len(heatmaps))
 
