@@ -11,10 +11,10 @@ Install dependencies with
 pip install -r requirements.txt
 ```
 
-Run the code with
+Create and show an example heatmap
 
 ```bash
-python quantum-game.py
+python quantum-game.py --show
 ```
 
 List all available parameters with

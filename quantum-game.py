@@ -126,6 +126,6 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
     if args.SHOW:
         fig.show()
 
-    if args.WRITE:
-        fig.write_html("plot" + str(state_index) + ".html")
+    if args.PREFIX:
+        fig.write_html(args.PREFIX + str(state_index) + ".html")
     # ----------visualization-------
