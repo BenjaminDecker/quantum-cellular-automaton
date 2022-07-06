@@ -89,6 +89,8 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
 
     # ------------quantum-----------
     for i in range(args.NUM_STEPS):
+        if i % 10 == 0:
+            print("Step " + str(i) + " of " + str(args.NUM_STEPS))
         for j in range(args.NUM_CELLS):
             pop_value = measure(state_vector, 0)
             population[i, j] = pop_value
