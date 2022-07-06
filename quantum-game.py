@@ -7,6 +7,7 @@ from parameters import args
 import builders
 from constants import DIM
 from gates import PROJECTION_KET_0, PROJECTION_KET_1, LOWERING_OPERATOR, RISING_OPERATOR, REORDER_ROTATE_GATE
+import warnings
 
 print("Building dead small n operators...")
 dead_small_n_operators = builders.empty()
@@ -96,8 +97,10 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
             density_matrix = np.outer(state_vector, state_vector.conj())
             partial_trace = np.trace(density_matrix.reshape(
                 2, 2**(args.NUM_CELLS - 1), 2, 2**(args.NUM_CELLS - 1)), axis1=1, axis2=3)
-            single_site_entropy[i, j] = (
-                -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                single_site_entropy[i, j] = (
+                    -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
 
             state_vector = np.dot(REORDER_ROTATE_GATE, state_vector)
 
