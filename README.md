@@ -26,8 +26,9 @@ python quantum-game.py --show
 
 Use different initial state vectors
 ```bash
-python quantum-game.py --show --initial_states single triple_blinker
+python quantum-game.py --show --initial-states single triple_blinker
 ```
+
 
 Use different rules
 ```bash

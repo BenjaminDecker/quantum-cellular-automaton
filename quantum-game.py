@@ -8,6 +8,8 @@ import builders
 from constants import DIM
 from gates import PROJECTION_KET_0, PROJECTION_KET_1, LOWERING_OPERATOR, RISING_OPERATOR, REORDER_ROTATE_GATE
 import warnings
+import webbrowser
+import os
 
 print("Building projection operators...")
 dead_small_n_operators = builders.empty()
@@ -133,11 +135,11 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
         fig.update_yaxes(scaleanchor=("x" + str(index + 1)), row=(index + 1))
 
     fig.update_layout(
-        coloraxis={'colorscale': 'inferno', 'cmax': 1.0, 'cmin': 0.0})
+        coloraxis={"colorscale": "inferno", "cmax": 1.0, "cmin": 0.0})
 
+    url = os.path.join(os.getcwd(), args.PREFIX +
+                       str(state_index) + ".html")
+    fig.write_html(url)
     if args.SHOW:
-        fig.show()
-
-    if args.PREFIX:
-        fig.write_html(args.PREFIX + str(state_index) + ".html")
+        webbrowser.open("file://" + url, new=2)
     # ----------visualization-------
