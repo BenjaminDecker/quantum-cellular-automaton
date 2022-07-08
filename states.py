@@ -1,4 +1,3 @@
-from typing_extensions import Self
 import numpy as np
 from random import random
 from constants import KET_0, KET_1, KET_PLUS
