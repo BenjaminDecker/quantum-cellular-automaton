@@ -23,7 +23,7 @@ parser.add_argument("--file-prefix", dest="PREFIX", default="plot",
 parser.add_argument("--file-formats", dest="FORMATS", nargs='+', default=["html"],
                     help="Specify which file formats to write to",
                     choices=["html", "eps", "jpeg", "jpg", "pdf", "pgf", "png", "ps", "raw", "rgba", "svg", "svgz", "tif", "tiff"])
-parser.add_argument("--no-sse", dest="NOSSE", action="store_true",
+parser.add_argument("--no-sse", dest="NO_SSE", action="store_true",
                     help="Do not calculate and plot the single site entrpy (Speeds up simulation significantly)")
 parser.add_argument("--initial-states", dest="STATE_VECTORS", nargs="+", default=["blinker"],
                     choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_1", "all_ket_1_but_outer",

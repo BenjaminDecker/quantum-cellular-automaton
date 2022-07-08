@@ -96,7 +96,7 @@ for state_index, state_vector in enumerate(state_vectors):
         for j in range(args.NUM_CELLS):
 
             # If the single-site-entropy is not calculated, part of computation is unnecessary
-            if args.NOSSE:
+            if args.NO_SSE:
                 # Measure the j-th cell and save population and rounded population
                 pop_value = measure(state_vector, j)
                 population[i, j] = pop_value
@@ -139,7 +139,7 @@ for state_index, state_vector in enumerate(state_vectors):
         heatmaps.append(classical)
     heatmaps.append(population)
     heatmaps.append(d_population)
-    if not args.NOSSE:
+    if not args.NO_SSE:
         heatmaps.append(single_site_entropy)
 
     # Create one plot for each format specified
