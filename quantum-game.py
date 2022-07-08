@@ -1,15 +1,15 @@
 import numpy as np
 from scipy.linalg import expm, logm
-from plotly.subplots import make_subplots
 import states
-import plotly.graph_objects as go
 from parameters import args
 import builders
 from constants import DIM
 from gates import PROJECTION_KET_0, PROJECTION_KET_1, LOWERING_OPERATOR, RISING_OPERATOR, REORDER_ROTATE_GATE
 import warnings
 import webbrowser
+import plot
 import os
+
 
 print("Building projection operators...")
 dead_small_n_operators = builders.empty()
@@ -63,8 +63,11 @@ print("\nCalculating unitary time evolution operator...")
 t = (np.pi / 2) * args.STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
-for state_index, state_vector in enumerate(args.STATE_VECTORS):
-    print("\nSimulating state " + str(state_index))
+print("\nCreating state vectors...")
+state_vectors = [getattr(states, name)() for name in args.STATE_VECTORS]
+
+for state_index, state_vector in enumerate(state_vectors):
+    print("\nSimulating state " + str(state_index) + "...")
     classical = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     d_population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
@@ -127,19 +130,12 @@ for state_index, state_vector in enumerate(args.STATE_VECTORS):
     if not args.NOSSE:
         heatmaps.append(single_site_entropy)
 
-    fig = make_subplots(rows=len(heatmaps))
+    path = os.path.join(os.getcwd(), args.PREFIX +
+                        str(state_index) + "." + args.FORMAT)
 
-    for index, heatmap in enumerate(heatmaps):
-        fig.add_trace(go.Heatmap(
-            z=heatmap.T, coloraxis="coloraxis"), index + 1, 1)
-        fig.update_yaxes(scaleanchor=("x" + str(index + 1)), row=(index + 1))
+    plot.plot(heatmaps=heatmaps, path=path)
 
-    fig.update_layout(
-        coloraxis={"colorscale": "inferno", "cmax": 1.0, "cmin": 0.0})
-
-    url = os.path.join(os.getcwd(), args.PREFIX +
-                       str(state_index) + ".html")
-    fig.write_html(url)
     if args.SHOW:
-        webbrowser.open("file://" + url, new=2)
+        webbrowser.open("file://" + path, new=2)
+
     # ----------visualization-------
