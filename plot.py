@@ -23,11 +23,11 @@ def plot(heatmaps, path):
         fig.write_html(path)
 
     else:
-        width, height = plt.rcParams.get("figure.figsize")
+        _, height = plt.rcParams.get("figure.figsize")
         ratio = args.NUM_STEPS / (len(heatmaps) * args.NUM_CELLS)
         ratio = max(ratio, 1.)
         fig, axs = plt.subplots(
-            len(heatmaps), sharex=True, sharey=True, figsize=(width * ratio, height))
+            len(heatmaps), sharex=True, sharey=True, figsize=(height * ratio, height))
 
         for index, heatmap in enumerate(heatmaps):
             pcm = axs[index].pcolormesh(
