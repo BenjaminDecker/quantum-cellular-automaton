@@ -2,7 +2,7 @@
 
 ## A classical simulation of the quantum game of life
 
-![](plot.png)
+![](plot.svg)
 
 ## Requirements
 Install dependencies with
