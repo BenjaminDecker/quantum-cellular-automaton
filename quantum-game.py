@@ -19,9 +19,8 @@ alive_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
     alive_small_n_operators[i] = builders.builder(i, PROJECTION_KET_1)
 
+
 # Add up all permutations for the specified rule
-
-
 def recursive_big_n_calculator(index, offset, alive_count):
     if offset == 0:
         return recursive_big_n_calculator(index, 1, alive_count)
@@ -95,41 +94,55 @@ for state_index, state_vector in enumerate(state_vectors):
         if i % 10 == 0:
             print("Step " + str(i) + " of " + str(args.NUM_STEPS))
         for j in range(args.NUM_CELLS):
+
+            # If the single-site-entropy is not calculated, part of computation is unnecessary
             if args.NOSSE:
-                # If the single-site-entropy is not calculated, part of computation is unnecessary
+                # Measure the j-th cell and save population and rounded population
                 pop_value = measure(state_vector, j)
                 population[i, j] = pop_value
                 d_population[i, j] = round(pop_value)
             else:
+                # Measure the first cell and save population and rounded population
                 pop_value = measure(state_vector, 0)
                 population[i, j] = pop_value
                 d_population[i, j] = round(pop_value)
 
-                if not args.NOSSE:
-                    density_matrix = np.outer(
-                        state_vector, state_vector.conj())
-                    partial_trace = np.trace(density_matrix.reshape(
-                        2, 2**(args.NUM_CELLS - 1), 2, 2**(args.NUM_CELLS - 1)), axis1=1, axis2=3)
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore")
-                        single_site_entropy[i, j] = (
-                            -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
+                # Calculate the single-site-entropy for the first cell
+                density_matrix = np.outer(
+                    state_vector, state_vector.conj())
+                partial_trace = np.trace(density_matrix.reshape(
+                    2, 2**(args.NUM_CELLS - 1), 2, 2**(args.NUM_CELLS - 1)), axis1=1, axis2=3)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    single_site_entropy[i, j] = (
+                        -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
 
+                # Rotate cells
+                # This is needed to have the next cell in the 0-th position in the next iteration,
+                # otherwise the calculation for the single-site-entropy would be more complicated
                 state_vector = np.dot(REORDER_ROTATE_GATE, state_vector)
 
         state_vector = np.dot(U, state_vector)
     # ------------quantum-----------
 
     # ----------visualization-------
-    # Choose which visualizations to write
-    heatmaps = [
-        classical,
-        population,
-        d_population,
-    ]
+
+    # Only print classical time evolution if it makes sense
+    does_classical_make_sense = True
+    does_classical_make_sense &= args.STEP_SIZE == 1.
+    for cell in classical[0]:
+        does_classical_make_sense &= (cell == 0. or cell == 1.)
+
+    # Choose which heatmaps to print
+    heatmaps = []
+    if does_classical_make_sense:
+        heatmaps.append(classical)
+    heatmaps.append(population)
+    heatmaps.append(d_population)
     if not args.NOSSE:
         heatmaps.append(single_site_entropy)
 
+    # Create one plot for each format specified
     for format in args.FORMATS:
         path = os.path.join(os.getcwd(), args.PREFIX +
                             str(state_index) + "." + format)
