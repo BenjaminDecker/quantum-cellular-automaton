@@ -11,7 +11,7 @@ import plot
 import os
 
 
-print("Building projection operators...")
+print("\nBuilding projection operators...")
 dead_small_n_operators = builders.empty()
 for i in range(args.NUM_CELLS):
     dead_small_n_operators[i] = builders.builder(i, PROJECTION_KET_0)
