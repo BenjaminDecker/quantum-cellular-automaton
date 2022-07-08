@@ -130,3 +130,16 @@ dmypy.json
 
 # Project specific
 *.html
+*.eps
+*.jpeg
+*.jpg
+*.pdf
+*.pgf
+*.png
+*.ps
+*.raw
+*.rgba
+*.svg
+*.svgz
+*.tif
+*.tiff
