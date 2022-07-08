@@ -34,3 +34,9 @@ Use different rules
 ```bash
 python quantum-game.py --show --distance 2 --rule 2 4
 ```
+
+
+Write to different file formats
+```bash
+python quantum-game.py --show --file-formats html svg pdf
+```
