@@ -130,12 +130,11 @@ for state_index, state_vector in enumerate(state_vectors):
     if not args.NOSSE:
         heatmaps.append(single_site_entropy)
 
-    path = os.path.join(os.getcwd(), args.PREFIX +
-                        str(state_index) + "." + args.FORMAT)
-
-    plot.plot(heatmaps=heatmaps, path=path)
-
-    if args.SHOW:
-        webbrowser.open("file://" + path, new=2)
+    for format in args.FORMATS:
+        path = os.path.join(os.getcwd(), args.PREFIX +
+                            str(state_index) + "." + format)
+        plot.plot(heatmaps=heatmaps, path=path)
+        if args.SHOW:
+            webbrowser.open("file://" + path, new=2)
 
     # ----------visualization-------

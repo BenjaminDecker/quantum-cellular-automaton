@@ -20,12 +20,12 @@ parser.add_argument("--show", dest="SHOW", action="store_true",
                     help="Try to open and show the output heatmaps immediately")
 parser.add_argument("--file-prefix", dest="PREFIX", default="plot",
                     help="Write to files with specified filename-prefix")
-parser.add_argument("--file-format", dest="FORMAT", default="html",
-                    help="Specify which file format to write to",
+parser.add_argument("--file-formats", dest="FORMATS", nargs='+', default=["html"],
+                    help="Specify which file formats to write to",
                     choices=["html", "eps", "jpeg", "jpg", "pdf", "pgf", "png", "ps", "raw", "rgba", "svg", "svgz", "tif", "tiff"])
 parser.add_argument("--no-sse", dest="NOSSE", action="store_true",
                     help="Do not calculate and plot the single site entrpy (Speeds up simulation significantly)")
-parser.add_argument("--initial-states", dest="STATE_VECTORS", nargs="*", default=["blinker"],
+parser.add_argument("--initial-states", dest="STATE_VECTORS", nargs="+", default=["blinker"],
                     choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_1", "all_ket_1_but_outer",
                              "equal_superposition", "equal_superposition_but_outer", "gradient", "rand", "snake"],
                     help="List of initial states")
