@@ -15,6 +15,7 @@ PROJECTION_KET_1 = np.array([[0., 0.], [0., 1.]])
 
 
 def reorder_rotate_gate():
+    print("Calculating reorder rotate gate...")
     gate = np.eye(DIM)
     for i in range(args.NUM_CELLS - 1):
         swap = np.kron(np.eye(2**i), np.kron(SWAP_GATE,
