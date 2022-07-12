@@ -62,11 +62,13 @@ print("\nCalculating unitary time evolution operator...")
 t = (np.pi / 2) * args.STEP_SIZE
 U = expm(-(1j) * t * hamiltonian)
 
-print("\nCreating state vectors...")
 state_vectors = [getattr(states, name)() for name in args.STATE_VECTORS]
 
 for state_index, state_vector in enumerate(state_vectors):
-    print("\nSimulating state " + str(state_index) + "...")
+    if len(state_vectors) > 1:
+        print("\nSimulating state " + str(state_index + 1) + "...")
+    else:
+        print("\nSimulating state...")
     classical = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
     d_population = np.empty([args.NUM_STEPS, args.NUM_CELLS], dtype=args.DTYPE)
