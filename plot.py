@@ -1,8 +1,10 @@
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-from parameters import args
+from parameters import Parser
 import os
+
+args = Parser.instance()
 
 colormap = "inferno"
 
@@ -24,7 +26,7 @@ def plot(heatmaps, path):
 
     else:
         _, height = plt.rcParams.get("figure.figsize")
-        ratio = args.NUM_STEPS / (len(heatmaps) * args.NUM_CELLS)
+        ratio = args.num_steps / (len(heatmaps) * args.rules.ncells)
         ratio = max(ratio, 1.)
         fig, axs = plt.subplots(
             len(heatmaps), sharex=True, sharey=True, figsize=(height * ratio, height))
@@ -32,14 +34,14 @@ def plot(heatmaps, path):
         for index, heatmap in enumerate(heatmaps):
             pcm = axs[index].pcolormesh(
                 heatmap.T, cmap=colormap, vmin=0., vmax=1.)
-            if args.NUM_STEPS < 50:
+            if args.num_steps < 50:
                 axs[index].set_aspect("equal")
 
         fig.colorbar(pcm, ax=axs[:])
 
         # I use subplots_adjust to move the colorbar closer to the heatmaps
         # I don't know why, but .77 and .78 seem to give good results for their respective num_cells-ranges
-        if args.NUM_STEPS <= 200:
+        if args.num_steps <= 200:
             plt.subplots_adjust(right=.77)
         else:
             plt.subplots_adjust(right=.78)
