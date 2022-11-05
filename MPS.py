@@ -89,5 +89,4 @@ class MPS(object):
             psi = self.merge_mps_tensor_pair(psi, self.A[i])
         # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
         psi = np.trace(psi, axis1=1, axis2=2)
-        print(np.linalg.norm(psi))
         return psi
