@@ -3,7 +3,7 @@ import numpy as np
 from scipy.linalg import expm, logm
 import states
 from parameters import Parser
-from constants import PROJECTION_KET_1, REORDER_ROTATE_GATE
+from constants import PROJECTION_KET_1, DIM, SWAP_GATE
 import warnings
 import webbrowser
 import plot
@@ -33,12 +33,24 @@ hamiltonian = mpo.asMatrix()
 step_range = range(args.rules.ncells) if args.periodic else range(
     args.rules.distance, args.rules.ncells - args.rules.distance)
 
-print("\nCalculating unitary time evolution operator...")
+print("Calculating unitary time evolution operator...")
 t = (np.pi / 2) * args.step_size
 U = expm(-(1j) * t * hamiltonian)
 
 state_vectors = [getattr(states, name)().as_vector()
                  for name in args.initial_states]
+
+# Only calculate reorder gate if needed
+REORDER_ROTATE_GATE = []
+if args.sse:
+    print("\nCalculating reorder rotate gate...")
+    gate = np.eye(DIM)
+    for i in range(args.rules.ncells - 1):
+        swap = np.kron(
+            np.eye(2**i),
+            np.kron(SWAP_GATE, np.eye(2**(args.rules.ncells - (i + 2)))))
+        gate = np.dot(swap, gate)
+    REORDER_ROTATE_GATE = gate
 
 for state_index, state_vector in enumerate(state_vectors):
     if len(state_vectors) > 1:
