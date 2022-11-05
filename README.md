@@ -32,7 +32,7 @@ python quantum-game.py --show --initial-states single triple_blinker
 
 Use different rules
 ```bash
-python quantum-game.py --show --distance 2 --rule 2 4
+python quantum-game.py --show --distance 2 --activation-interval 2 4
 ```
 
 
