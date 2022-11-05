@@ -1,4 +1,3 @@
-# from parameters import args
 import numpy as np
 from parameters import Rules
 from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR
@@ -151,19 +150,7 @@ class MPO(object):
         """
         # leading and trailing bond dimensions must agree (typically 1)
         assert D[0] == D[-1]
-        self.A = [np.zeros((D[i], D[i+1], 2, 2)) for i in range(len(D)-1)]
-
-    # def __init__(self, rules: Rules) -> None:
-    #     automaton = StateAutomaton(rules=rules)
-    #     num_states = len(automaton.states)
-    #     self.tensor = np.reshape(
-    #         np.zeros(num_states**2 * 2**2),
-    #         (num_states, num_states, 2, 2)
-    #     )
-    #     for (index, state) in enumerate(automaton.states):
-    #         for edge in state.edges:
-    #             self.tensor[edge.index, index] += edge.operator
-    #     self.num_cells = rules.ncells
+        self.A = [np.zeros((2, 2, D[i], D[i+1])) for i in range(len(D)-1)]
 
     @classmethod
     def hamiltonian_from_rules(cls, rules: Rules):
@@ -174,26 +161,26 @@ class MPO(object):
 
         tensor = np.reshape(
             np.zeros(num_states**2 * 2**2),
-            (num_states, num_states, 2, 2)
+            (2, 2, num_states, num_states)
         )
         for (index, state) in enumerate(state_automaton.states):
             for edge in state.edges:
-                tensor[edge.index, index] += edge.operator
-        mpo.A[0][0, :, :, :] = tensor[-1, :, :, :]
+                tensor[:, :, edge.index, index] += edge.operator
+        mpo.A[0][:, :, 0, :] = tensor[:, :, -1, :]
         for i in range(1, len(D) - 2):
             mpo.A[i] = tensor
-        mpo.A[-1][:, 0, :, :] = tensor[:, 0, :, :]
+        mpo.A[-1][:, :, :, 0] = tensor[:, :, :, 0]
         return mpo
 
     def asMatrix(self):
         result = self.A[0]
         for i in range(1, len(self.A)):
-            result = np.tensordot(result, self.A[i], axes=(1, 0))
+            result = np.tensordot(result, self.A[i], axes=(3, 2))
             result = np.transpose(result, (0, 3, 1, 4, 2, 5))
             result = np.reshape(result, (
-                result.shape[0],
-                result.shape[1],
+                result.shape[0] * result.shape[1],
                 result.shape[2] * result.shape[3],
-                result.shape[4] * result.shape[5]
+                result.shape[4],
+                result.shape[5]
             ))
-        return np.reshape(result, (result.shape[2], result.shape[3]))
+        return np.reshape(result, (result.shape[0], result.shape[1]))

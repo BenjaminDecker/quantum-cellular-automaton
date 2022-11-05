@@ -11,7 +11,7 @@ import os
 
 args = Parser.instance()
 
-alive_small_n_operators = []
+ket_1_projectors = []
 for cell_index in range(args.rules.ncells):
     result = np.array([1.])
     for i in range(cell_index):
@@ -19,11 +19,11 @@ for cell_index in range(args.rules.ncells):
     result = np.kron(result, PROJECTION_KET_1)
     for i in range(cell_index + 1, args.rules.ncells):
         result = np.kron(result, np.eye(2, dtype=args.dtype))
-    alive_small_n_operators.append(result)
+    ket_1_projectors.append(result)
 
 
 def measure(state_vector, basis_state):
-    return np.vdot(state_vector, np.dot(alive_small_n_operators[basis_state], state_vector)).real
+    return np.vdot(state_vector, np.dot(ket_1_projectors[basis_state], state_vector)).real
 
 
 mpo = MPO.hamiltonian_from_rules(args.rules)
