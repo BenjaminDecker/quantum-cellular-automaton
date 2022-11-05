@@ -37,7 +37,8 @@ print("\nCalculating unitary time evolution operator...")
 t = (np.pi / 2) * args.step_size
 U = expm(-(1j) * t * hamiltonian)
 
-state_vectors = [getattr(states, name)() for name in args.initial_states]
+state_vectors = [getattr(states, name)().as_vector()
+                 for name in args.initial_states]
 
 for state_index, state_vector in enumerate(state_vectors):
     if len(state_vectors) > 1:

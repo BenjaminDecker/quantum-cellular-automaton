@@ -91,7 +91,7 @@ class Parser(object):
             nargs="+",
             default=["blinker"],
             choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_1", "all_ket_1_but_outer",
-                     "equal_superposition", "equal_superposition_but_outer", "gradient", "rand", "snake"],
+                     "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
             help="List of initial states"
         )
         parser.add_argument(
