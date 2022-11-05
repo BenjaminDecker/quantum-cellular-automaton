@@ -172,15 +172,28 @@ class MPO(object):
         mpo.A[-1][:, :, :, 0] = tensor[:, :, :, 0]
         return mpo
 
+    @classmethod
+    def merge_mpo_tensor_pair(cls, A0, A1):
+        """
+        Merge two neighboring MPO tensors.
+        """
+        A = np.tensordot(A0, A1, (3, 2))
+        # pair original physical dimensions of A0 and A1
+        A = A.transpose((0, 3, 1, 4, 2, 5))
+        # combine original physical dimensions
+        A = A.reshape((
+            A.shape[0] * A.shape[1],
+            A.shape[2] * A.shape[3],
+            A.shape[4],
+            A.shape[5]
+        ))
+        return A
+
     def asMatrix(self):
-        result = self.A[0]
+        """Merge all tensors to obtain the matrix representation on the full Hilbert space."""
+        H = self.A[0]
         for i in range(1, len(self.A)):
-            result = np.tensordot(result, self.A[i], axes=(3, 2))
-            result = np.transpose(result, (0, 3, 1, 4, 2, 5))
-            result = np.reshape(result, (
-                result.shape[0] * result.shape[1],
-                result.shape[2] * result.shape[3],
-                result.shape[4],
-                result.shape[5]
-            ))
-        return np.reshape(result, (result.shape[0], result.shape[1]))
+            H = self.merge_mpo_tensor_pair(H, self.A[i])
+        # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
+        H = np.trace(H, axis1=2, axis2=3)
+        return H
