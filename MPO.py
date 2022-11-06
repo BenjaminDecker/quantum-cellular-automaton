@@ -14,7 +14,11 @@ class StateData(object):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, StateData):
             return False
-        return self.ket_1_ops == other.ket_1_ops and self.ket_0_ops == other.ket_0_ops and self.s == other.s
+        return (
+            self.ket_1_ops == other.ket_1_ops and
+            self.ket_0_ops == other.ket_0_ops and
+            self.s == other.s
+        )
 
     @classmethod
     def initial_state_data(cls):

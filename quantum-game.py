@@ -30,8 +30,11 @@ mpo = MPO.hamiltonian_from_rules(args.rules)
 
 hamiltonian = mpo.asMatrix()
 
-step_range = range(args.rules.ncells) if args.periodic else range(
-    args.rules.distance, args.rules.ncells - args.rules.distance)
+step_range = (
+    range(args.rules.ncells)
+    if args.periodic else
+    range(args.rules.distance, args.rules.ncells - args.rules.distance)
+)
 
 print("Calculating unitary time evolution operator...")
 t = (np.pi / 2) * args.step_size
@@ -48,7 +51,8 @@ if args.sse:
     for i in range(args.rules.ncells - 1):
         swap = np.kron(
             np.eye(2**i),
-            np.kron(SWAP_GATE, np.eye(2**(args.rules.ncells - (i + 2)))))
+            np.kron(SWAP_GATE, np.eye(2**(args.rules.ncells - (i + 2))))
+        )
         gate = np.dot(swap, gate)
     REORDER_ROTATE_GATE = gate
 
@@ -59,11 +63,17 @@ for state_index, state_vector in enumerate(state_vectors):
         print("\nSimulating state...")
     classical = np.empty([args.num_steps, args.rules.ncells], dtype=args.dtype)
     population = np.empty(
-        [args.num_steps, args.rules.ncells], dtype=args.dtype)
+        [args.num_steps, args.rules.ncells],
+        dtype=args.dtype
+    )
     d_population = np.empty(
-        [args.num_steps, args.rules.ncells], dtype=args.dtype)
+        [args.num_steps, args.rules.ncells],
+        dtype=args.dtype
+    )
     single_site_entropy = np.empty(
-        [args.num_steps, args.rules.ncells], dtype=args.dtype)
+        [args.num_steps, args.rules.ncells],
+        dtype=args.dtype
+    )
 
     # ----------classical----------
     for i in range(args.rules.ncells):
@@ -102,12 +112,24 @@ for state_index, state_vector in enumerate(state_vectors):
                 # Calculate the single-site-entropy for the first cell
                 density_matrix = np.outer(
                     state_vector, state_vector.conj())
-                partial_trace = np.trace(density_matrix.reshape(
-                    2, 2**(args.rules.ncells - 1), 2, 2**(args.rules.ncells - 1)), axis1=1, axis2=3)
+                partial_trace = np.trace(
+                    density_matrix.reshape(
+                        2,
+                        2**(args.rules.ncells - 1),
+                        2,
+                        2**(args.rules.ncells - 1)
+                    ),
+                    axis1=1,
+                    axis2=3
+                )
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     single_site_entropy[i, j] = (
-                        -np.trace(np.dot(partial_trace, logm(partial_trace) / np.log(2)))).real
+                        -np.trace(np.dot(
+                            partial_trace,
+                            logm(partial_trace) / np.log(2)
+                        ))
+                    ).real
 
                 # Rotate cells
                 # This is needed to have the next cell in the 0-th position in the next iteration,
@@ -136,8 +158,10 @@ for state_index, state_vector in enumerate(state_vectors):
 
     # Create one plot for each format specified
     for format in args.file_formats:
-        path = os.path.join(os.getcwd(), args.file_prefix +
-                            str(state_index) + "." + format)
+        path = os.path.join(
+            os.getcwd(),
+            args.file_prefix + str(state_index) + "." + format
+        )
         plot.plot(heatmaps=heatmaps, path=path)
         if args.show:
             webbrowser.open("file://" + path, new=2)

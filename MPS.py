@@ -28,12 +28,14 @@ class MPS(object):
             self.A = [np.zeros((d, D[i], D[i+1])) for i in range(len(D)-1)]
         elif fill == 'random real':
             # random real entries
-            self.A = [np.random.normal(
-                size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)]
+            self.A = [
+                np.random.normal(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
+            ]
         elif fill == 'random complex':
             # random complex entries
-            self.A = [crandn(size=(d, D[i], D[i+1])) /
-                      np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)]
+            self.A = [
+                crandn(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
+            ]
         else:
             raise ValueError('fill = {} invalid.'.format(fill))
 

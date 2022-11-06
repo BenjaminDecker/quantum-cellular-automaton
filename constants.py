@@ -24,6 +24,6 @@ S_OPERATOR = LOWERING_OPERATOR + RISING_OPERATOR
 
 def Rx_gate(theta):
     return np.array([
-        [np.cos(theta / 2), -1j * np.sin(theta / 2)],
-        [-1j * np.sin(theta / 2), np.cos(theta / 2)]
+        [np.cos(theta / 2),         -1j * np.sin(theta / 2)],
+        [-1j * np.sin(theta / 2),   np.cos(theta / 2)]
     ])
