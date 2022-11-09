@@ -143,3 +143,4 @@ dmypy.json
 *.svgz
 *.tif
 *.tiff
+profile.json
