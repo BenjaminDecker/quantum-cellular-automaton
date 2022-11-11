@@ -63,7 +63,7 @@ class MPS(object):
         right = np.zeros((2, bond_dim, 1))
         right[:, 0, 0] = np.array([(1. - plist[-1])**.5, plist[-1]**.5])
         if len(plist) == 1:
-            return cls.from_tensors(Alist=[left[:, :, 0:0]])
+            return cls.from_tensors(Alist=[left[:, :, :]])
         if len(plist) == 2:
             return cls.from_tensors(Alist=[left, right])
         Alist = [left]
@@ -85,6 +85,46 @@ class MPS(object):
         # combine original physical dimensions
         A = A.reshape((A.shape[0]*A.shape[1], A.shape[2], A.shape[3]))
         return A
+
+    def orthonormalize_left_qr(self, i):
+        """
+        Left-orthonormalize the MPS tensor at index i by a QR decomposition,
+        and update tensor at next site.
+        """
+        assert i < len(self.A) - 1
+        A = self.A[i]
+        Anext = self.A[i + 1]
+        # perform QR decomposition and replace A by reshaped Q matrix
+        s = A.shape
+        assert len(s) == 3
+        Q, R = np.linalg.qr(np.reshape(A, (s[0]*s[1], s[2])))
+        A = np.reshape(Q, (s[0], s[1], Q.shape[1]))
+        # update Anext tensor: multiply with R from left
+        Anext = np.transpose(np.tensordot(R, Anext, (1, 1)), (1, 0, 2))
+        self.A[i] = A
+        self.A[i + 1] = Anext
+        return self
+
+    def orthonormalize_right_qr(self, i):
+        """
+        Right-orthonormalize the MPS tensor at index i by a QR decomposition,
+        and update tensor at previous site.
+        """
+        assert i > 0
+        A = self.A[i]
+        Aprev = self.A[i - 1]
+        # flip left and right virtual bond dimensions
+        A = np.transpose(A, (0, 2, 1))
+        # perform QR decomposition and replace A by reshaped Q matrix
+        s = A.shape
+        assert len(s) == 3
+        Q, R = np.linalg.qr(np.reshape(A, (s[0]*s[1], s[2])))
+        A = np.transpose(np.reshape(Q, (s[0], s[1], Q.shape[1])), (0, 2, 1))
+        # update Aprev tensor: multiply with R from right
+        Aprev = np.tensordot(Aprev, R, (2, 1))
+        self.A[i] = A
+        self.A[i - 1] = Aprev
+        return self
 
     def as_vector(self):
         """Merge all tensors to obtain the vector representation on the full Hilbert space."""
