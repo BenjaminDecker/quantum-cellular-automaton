@@ -64,8 +64,6 @@ class MPS(object):
         right[:, 0, 0] = np.array([(1. - plist[-1])**.5, plist[-1]**.5])
         if len(plist) == 1:
             return cls.from_tensors(Alist=[left[:, :, :]])
-        if len(plist) == 2:
-            return cls.from_tensors(Alist=[left, right])
         Alist = [left]
         for i in range(1, len(plist) - 1):
             tensor = np.zeros((2, bond_dim, bond_dim))
