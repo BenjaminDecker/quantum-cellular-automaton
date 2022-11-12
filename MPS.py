@@ -15,8 +15,7 @@ class MPS(object):
     """
     Matrix product state (MPS) class.
 
-    The i-th MPS tensor has dimension `[d, D[i], D[i+1]]` with `d` the physical
-    dimension at each site and `D` the list of virtual bond dimensions.
+    The i-th MPS tensor has dimension `[d, D[i], D[i+1]]` with `d` the physical dimension at each site and `D` the list of virtual bond dimensions.
     """
 
     def __init__(self, d, D, fill='zero'):
@@ -86,8 +85,7 @@ class MPS(object):
 
     def orthonormalize_left_qr(self, i):
         """
-        Left-orthonormalize the MPS tensor at index i by a QR decomposition,
-        and update tensor at next site.
+        Left-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at next site.
         """
         assert i < len(self.A) - 1
         A = self.A[i]
@@ -105,8 +103,7 @@ class MPS(object):
 
     def orthonormalize_right_qr(self, i):
         """
-        Right-orthonormalize the MPS tensor at index i by a QR decomposition,
-        and update tensor at previous site.
+        Right-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at previous site.
         """
         assert i > 0
         A = self.A[i]
@@ -125,7 +122,9 @@ class MPS(object):
         return self
 
     def as_vector(self):
-        """Merge all tensors to obtain the vector representation on the full Hilbert space."""
+        """
+        Merge all tensors to obtain the vector representation on the full Hilbert space.
+        """
         psi = self.A[0]
         for i in range(1, len(self.A)):
             psi = self.merge_mps_tensor_pair(psi, self.A[i])
