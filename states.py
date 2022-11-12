@@ -58,7 +58,6 @@ def gradient(reverse=False):
     plist = [
         np.sin(np.pi * i / (args.rules.ncells - 1) / 2) for i in range(args.rules.ncells)
     ]
-    print(plist)
     return MPS.from_density_distribution(plist=list(reversed(plist)) if reverse else plist)
 
 
