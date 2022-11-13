@@ -72,6 +72,24 @@ class MPS(object):
         return cls.from_tensors(Alist=Alist)
 
     @classmethod
+    def from_vector(cls, psi):
+        Alist = []
+        psi = np.array(psi)
+        psi = np.reshape(psi, (2, -1))
+
+        while psi.shape[1] > 1:
+            Q, R = np.linalg.qr(psi)
+            Q = np.reshape(Q, (-1, 2, R.shape[0]))
+            Q = np.transpose(Q, (1, 0, 2))
+            Alist.append(Q)
+            psi = np.reshape(R, (R.shape[0] * 2, -1))
+        psi = np.reshape(psi, (-1, 2, 1))
+        psi = np.transpose(psi, (1, 0, 2))
+        Alist.append(psi)
+
+        return cls.from_tensors(Alist=Alist)
+
+    @classmethod
     def merge_mps_tensor_pair(cls, A0, A1):
         """
         Merge two neighboring MPS tensors.
@@ -120,6 +138,23 @@ class MPS(object):
         self.A[i] = A
         self.A[i - 1] = Aprev
         return self
+
+    def make_site_canonical(self, i):
+        """
+        Brings the mps into site-canonical form with the center at site i
+        """
+        for j in range(i):
+            self.orthonormalize_left_qr(j)
+        for j in reversed(range(i + 1, len(self.A))):
+            self.orthonormalize_right_qr(j)
+        return self
+
+    # def make_bond_canonical(self, i):
+    #     """
+    #     Brings the mps into bond-canonical form with the center
+    #     """
+    #     # TODO
+    #     pass
 
     def as_vector(self):
         """
