@@ -80,12 +80,6 @@ class Parser(object):
                      "png", "ps", "raw", "rgba", "svg", "svgz", "tif", "tiff"]
         )
         parser.add_argument(
-            "--sse",
-            dest="SSE",
-            action="store_true",
-            help="Calculate and plot the single site entropy (Slows down simulation significantly)"
-        )
-        parser.add_argument(
             "--initial-states",
             dest="INITIAL_STATES",
             nargs="+",
@@ -93,12 +87,6 @@ class Parser(object):
             choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_1", "all_ket_1_but_outer",
                      "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
             help="List of initial states"
-        )
-        parser.add_argument(
-            "--dtype",
-            dest="DTYPE",
-            default="float32",
-            choices=["float16", "float32", "float64", "float128"]
         )
 
         args = parser.parse_args()
@@ -114,11 +102,9 @@ class Parser(object):
         self.show = args.SHOW
         self.file_prefix = args.PREFIX
         self.file_formats = args.FORMATS
-        self.sse = args.SSE
         self.initial_states = args.INITIAL_STATES
         if not isinstance(self.initial_states, list):
             self.initial_states = [self.initial_states]
-        self.dtype = getattr(np, args.DTYPE)
 
     @classmethod
     def instance(cls):
