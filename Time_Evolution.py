@@ -2,11 +2,19 @@ from MPO import MPO
 from MPS import MPS
 from parameters import Parser
 import numpy as np
-from constants import DIM, SWAP_GATE, PROJECTION_KET_1
+from constants import PROJECTION_KET_1
 from scipy.linalg import expm, logm
 import warnings
 
 args = Parser.instance()
+
+
+class Result(object):
+    def __init__(self, classical, population, d_population, single_site_entropy) -> None:
+        self.classical = classical
+        self.population = np.array(population)
+        self.d_population = np.array(d_population)
+        self.single_site_entropy = np.array(single_site_entropy)
 
 
 class Time_Evolution(object):
@@ -15,138 +23,141 @@ class Time_Evolution(object):
     """
 
     @classmethod
-    def classical(cls, states: list[MPS]) -> list:
+    def evolve(cls, states: list[MPS], hamiltonian: MPO, algorithm='exact') -> list[Result]:
         """
-        Non-Quantum time evolution according to classical wolfram rules
+        Performs the time evolution of all states according to the given hamiltonian via the specified algorithm
         """
-        # TODO
-        return [np.empty([args.num_steps, args.rules.ncells]) for _ in range(len(states))]
+        cls.hamiltonian = hamiltonian
+        population = np.empty(
+            [args.num_steps, args.rules.ncells]
+        )
+        d_population = np.empty(
+            [args.num_steps, args.rules.ncells]
+        )
+        single_site_entropy = np.empty(
+            [args.num_steps, args.rules.ncells]
+        )
+
+        if algorithm == 'exact':
+            print("Preparing data...")
+            t = (np.pi / 2) * args.step_size
+            cls.U = expm(-(1j) * t * cls.hamiltonian.asMatrix())
+
+        results = []
+
+        for state_index, state in enumerate(states):
+            print("\nSimulating state " + str(state_index + 1) + "...")
+            site_canonical_hint = None
+            for step in range(args.num_steps):
+                if step % 10 == 0:
+                    print("Step " + str(step) + " of " + str(args.num_steps))
+                cls.measure(
+                    state=state,
+                    population=population[step, :],
+                    d_population=d_population[step, :],
+                    single_site_entropy=single_site_entropy[step, :],
+                    site_canonical_hint=site_canonical_hint
+                )
+                if algorithm == 'exact':
+                    # After the exact step, the mps will be in site canonical form with the center at the last site
+                    site_canonical_hint = "last"
+                    state = cls.exact_step(state)
+            classical = cls.classical(first_column=population[0, :])
+            results.append(Result(
+                classical=classical,
+                population=population,
+                d_population=d_population,
+                single_site_entropy=single_site_entropy
+            ))
+        return results
 
     @classmethod
-    def exact(cls, states: list[MPS], hamiltonian: MPO) -> list[list]:
+    def measure(cls, state: MPS, population, d_population, single_site_entropy, site_canonical_hint=None):
+        """
+        Measures the population, rounded population and single-site entropy of the given state and writes the results into the given arrays
+        """
+        # If no site hint is given or if site hint is invalid, start with the center tensor at site 0
+        if site_canonical_hint == None:
+            state.make_site_canonical(0)
+        backwards = site_canonical_hint == "last"
+        site_range = range(args.rules.ncells)
+        first = True
+        for site in reversed(site_range) if backwards else site_range:
+            # In every iteration except the first, shift the center tensor one site to the left/right
+            if first:
+                first = False
+            else:
+                if backwards:
+                    state.orthonormalize_right_qr(site + 1)
+                else:
+                    state.orthonormalize_left_qr(site - 1)
+
+            A = state.A[site]
+
+            # Calculate the population density
+            result = np.tensordot(
+                A,
+                A.conj(),
+                ((1, 2), (1, 2))
+            )
+            result = np.tensordot(
+                result,
+                PROJECTION_KET_1,
+                ((0, 1), (0, 1))
+            ).real
+            population[site] = result
+            d_population[site] = np.round(result)
+
+            # Calculate the single-site entropy
+            partial_trace = np.tensordot(
+                A.conj(),
+                A,
+                ((1, 2), (1, 2))
+            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                single_site_entropy[site] = (-np.trace(np.dot(
+                    partial_trace,
+                    logm(partial_trace) / np.log(2)
+                ))).real
+
+    @classmethod
+    def tdvp_step(cls, state: MPS) -> list[list]:
+        """
+        Evolves the quantum state using the tdvp algorithm.
+        """
+        # TODO
+        pass
+
+    @classmethod
+    def exact_step(cls, state: MPS) -> MPS:
         """
         Evolves the quantum state by calculating a time evolution operator matrix and using explicit matrix vector product. Does not use any tensor network optimizations.
         """
-        ket_1_projectors = []
-        for cell_index in range(args.rules.ncells):
-            result = np.array([1.])
-            for i in range(cell_index):
-                result = np.kron(result, np.eye(2))
-            result = np.kron(result, PROJECTION_KET_1)
-            for i in range(cell_index + 1, args.rules.ncells):
-                result = np.kron(result, np.eye(2))
-            ket_1_projectors.append(result)
-
-        # If sse is turned on, pre-compute the ror-gate
-        if args.sse:
-            cls.reorder_rotate_gate()
-
-        print("Calculating unitary time evolution operator...")
-        t = (np.pi / 2) * args.step_size
-        U = expm(-(1j) * t * hamiltonian.asMatrix())
-
-        result = []
-
-        for state_index, state_vector in enumerate(states):
-            state_vector = state_vector.as_vector()
-            if len(states) > 1:
-                print("\nSimulating state " + str(state_index + 1) + "...")
-            else:
-                print("\nSimulating state...")
-
-            population = np.empty(
-                [args.num_steps, args.rules.ncells]
-            )
-            d_population = np.empty(
-                [args.num_steps, args.rules.ncells]
-            )
-            single_site_entropy = np.empty(
-                [args.num_steps, args.rules.ncells]
-            )
-            for i in range(args.num_steps):
-                if i % 10 == 0:
-                    print("Step " + str(i) + " of " + str(args.num_steps))
-                for j in range(args.rules.ncells):
-
-                    # If the single-site-entropy is not calculated, part of computation is unnecessary
-                    if not args.sse:
-                        # Measure the j-th cell and save population and rounded population
-
-                        pop_value = np.vdot(
-                            state_vector,
-                            np.dot(ket_1_projectors[j], state_vector)
-                        ).real
-                        population[i, j] = pop_value
-                        d_population[i, j] = round(pop_value)
-                    else:
-                        # Measure the first cell and save population and rounded population
-                        pop_value = np.vdot(
-                            state_vector,
-                            np.dot(ket_1_projectors[0], state_vector)
-                        ).real
-                        population[i, j] = pop_value
-                        d_population[i, j] = round(pop_value)
-
-                        # Calculate the single-site-entropy for the first cell
-                        density_matrix = np.outer(
-                            state_vector, state_vector.conj())
-                        partial_trace = np.trace(
-                            density_matrix.reshape(
-                                2,
-                                2**(args.rules.ncells - 1),
-                                2,
-                                2**(args.rules.ncells - 1)
-                            ),
-                            axis1=1,
-                            axis2=3
-                        )
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore")
-                            single_site_entropy[i, j] = (
-                                -np.trace(np.dot(
-                                    partial_trace,
-                                    logm(partial_trace) / np.log(2)
-                                ))
-                            ).real
-
-                        # Rotate cells
-                        # This is needed to have the next cell in the 0-th position in the next iteration, otherwise the calculation for the single-site-entropy would be more complicated
-                        state_vector = np.dot(
-                            cls.reorder_rotate_gate(),
-                            state_vector
-                        )
-
-                state_vector = np.dot(U, state_vector)
-
-            if args.sse:
-                result.append([
-                    population,
-                    d_population,
-                    single_site_entropy
-                ])
-            else:
-                result.append([
-                    population,
-                    d_population
-                ])
-        return result
+        psi = state.as_vector()
+        psi = np.dot(cls.U, psi)
+        return MPS.from_vector(psi)
 
     @classmethod
-    def reorder_rotate_gate(cls):
+    def classical(cls, first_column):
         """
-        Singleton-method for the reorder rotate gate
+        Non-Quantum time evolution according to classical wolfram rules
         """
-        try:
-            return cls._rorgate
-        except AttributeError:
-            print("Calculating reorder rotate gate...")
-            rorgate = np.eye(DIM)
-            for i in range(args.rules.ncells - 1):
-                swap = np.kron(
-                    np.eye(2**i),
-                    np.kron(SWAP_GATE, np.eye(
-                        2**(args.rules.ncells - (i + 2))))
-                )
-                rorgate = np.dot(swap, rorgate)
-            cls._rorgate = rorgate
-            return cls._rorgate
+        classical = np.zeros(
+            [args.num_steps, args.rules.ncells]
+        )
+        classical[0, :] = first_column
+        classical[:, 0] = first_column[0]
+        classical[:, -1] = first_column[-1]
+        for step in range(1, args.num_steps):
+            for site in range(args.rules.distance, args.rules.ncells - args.rules.distance):
+                sum = 0.
+                for offset in range(-args.rules.distance, args.rules.distance + 1):
+                    if offset != 0:
+                        sum += classical[step - 1, (site + offset)]
+                if sum in args.rules.activation_interval:
+                    classical[step, site] = 1. - classical[step - 1, site]
+                else:
+                    classical[step, site] = classical[step - 1, site]
+
+        return classical
