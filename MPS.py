@@ -1,6 +1,9 @@
 import numpy as np
+from parameters import Parser
 
 # Most of the code of this file is adapted from the tensor network lecture by Prof. Christian Mendl
+
+args = Parser.instance()
 
 
 def crandn(size):
@@ -53,9 +56,9 @@ class MPS(object):
         return s
 
     @classmethod
-    def from_density_distribution(cls, plist, bond_dim=5):
+    def from_density_distribution(cls, plist, bond_dim=args.rules.ncells):
         """
-        Construct a MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
+        Constructs a MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
         """
         left = np.zeros((2, 1, bond_dim))
         left[:, 0, 0] = np.array([(1. - plist[0])**.5, plist[0]**.5])
@@ -73,6 +76,9 @@ class MPS(object):
 
     @classmethod
     def from_vector(cls, psi):
+        """
+        Creates a MPS from a full state vector array.
+        """
         Alist = []
         psi = np.array(psi)
         psi = np.reshape(psi, (2, -1))
@@ -90,16 +96,21 @@ class MPS(object):
         return cls.from_tensors(Alist=Alist)
 
     @classmethod
-    def merge_mps_tensor_pair(cls, A0, A1):
-        """
-        Merge two neighboring MPS tensors.
-        """
-        A = np.tensordot(A0, A1, (2, 1))
-        # pair original physical dimensions of A0 and A1
-        A = A.transpose((0, 2, 1, 3))
-        # combine original physical dimensions
-        A = A.reshape((A.shape[0]*A.shape[1], A.shape[2], A.shape[3]))
-        return A
+    def left_qr_tensors(cls, A):
+        s = A.shape
+        assert s[2] > 1
+        Q, R = np.linalg.qr(np.reshape(A, (s[0]*s[1], s[2])))
+        Q = np.reshape(Q, (s[0], s[1], -1))
+        return Q, R
+
+    @classmethod
+    def right_qr_tensors(cls, A):
+        A_new, R_new = cls.left_qr_tensors(
+            np.transpose(A, (0, 2, 1))
+        )
+        A_new = np.transpose(A_new, (0, 2, 1))
+        R_new = np.transpose(R_new, (1, 0))
+        return A_new, R_new
 
     def orthonormalize_left_qr(self, i):
         """
@@ -107,16 +118,15 @@ class MPS(object):
         """
         assert i < len(self.A) - 1
         A = self.A[i]
-        Anext = self.A[i + 1]
         # perform QR decomposition and replace A by reshaped Q matrix
-        s = A.shape
-        assert len(s) == 3
-        Q, R = np.linalg.qr(np.reshape(A, (s[0]*s[1], s[2])))
-        A = np.reshape(Q, (s[0], s[1], Q.shape[1]))
+        A_new, R = MPS.left_qr_tensors(A)
         # update Anext tensor: multiply with R from left
-        Anext = np.transpose(np.tensordot(R, Anext, (1, 1)), (1, 0, 2))
-        self.A[i] = A
-        self.A[i + 1] = Anext
+        Aright = np.transpose(
+            np.tensordot(R, self.A[i + 1], (1, 1)),
+            (1, 0, 2)
+        )
+        self.A[i] = A_new
+        self.A[i + 1] = Aright
         return self
 
     def orthonormalize_right_qr(self, i):
@@ -125,18 +135,12 @@ class MPS(object):
         """
         assert i > 0
         A = self.A[i]
-        Aprev = self.A[i - 1]
-        # flip left and right virtual bond dimensions
-        A = np.transpose(A, (0, 2, 1))
         # perform QR decomposition and replace A by reshaped Q matrix
-        s = A.shape
-        assert len(s) == 3
-        Q, R = np.linalg.qr(np.reshape(A, (s[0]*s[1], s[2])))
-        A = np.transpose(np.reshape(Q, (s[0], s[1], Q.shape[1])), (0, 2, 1))
-        # update Aprev tensor: multiply with R from right
-        Aprev = np.tensordot(Aprev, R, (2, 1))
-        self.A[i] = A
-        self.A[i - 1] = Aprev
+        A_new, R = MPS.right_qr_tensors(A)
+        # update left tensor: multiply with R from right
+        Aleft = np.tensordot(self.A[i - 1], R, (2, 0))
+        self.A[i] = A_new
+        self.A[i - 1] = Aleft
         return self
 
     def make_site_canonical(self, i):
@@ -149,20 +153,19 @@ class MPS(object):
             self.orthonormalize_right_qr(j)
         return self
 
-    # def make_bond_canonical(self, i):
-    #     """
-    #     Brings the mps into bond-canonical form with the center
-    #     """
-    #     # TODO
-    #     pass
-
     def as_vector(self):
         """
         Merge all tensors to obtain the vector representation on the full Hilbert space.
         """
         psi = self.A[0]
         for i in range(1, len(self.A)):
-            psi = self.merge_mps_tensor_pair(psi, self.A[i])
+            psi = np.tensordot(psi, self.A[i], (2, 1))
+            psi = np.transpose(psi, (0, 2, 1, 3))
+            psi = np.reshape(psi, (
+                psi.shape[0] * psi.shape[1],
+                psi.shape[2],
+                psi.shape[3]
+            ))
         # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
         psi = np.trace(psi, axis1=1, axis2=2)
         return psi

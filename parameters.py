@@ -41,15 +41,8 @@ class Parser(object):
             "--num-steps",
             dest="NUM_STEPS",
             type=int,
-            default=100,
+            default=1000,
             help="Number of time steps to simulate"
-        )
-        parser.add_argument(
-            "--step-size",
-            dest="STEP_SIZE",
-            type=float,
-            default=1.,
-            help="Size of one time step. The time step size is calculated as (STEP_SIZE * pi/2)."
         )
         parser.add_argument(
             "--periodic",
@@ -58,10 +51,30 @@ class Parser(object):
             help="Use periodic instead of constant boundary conditions"
         )
         parser.add_argument(
+            "--algorithm",
+            dest="ALGORITHM",
+            default="exact",
+            choices=["exact", "tdvp"]
+        )
+        parser.add_argument(
+            "--step-size",
+            dest="STEP_SIZE",
+            type=float,
+            default=.1,
+            help="Size of one time step. The time step size is calculated as (STEP_SIZE * pi/2)"
+        )
+        parser.add_argument(
+            "--plot-step-interval",
+            dest="PLOT_STEP_INTERVAL",
+            type=int,
+            default=10,
+            help="Amount of time steps after which a step is plotted to the output"
+        )
+        parser.add_argument(
             "--show",
             dest="SHOW",
             action="store_true",
-            help="Show the output heatmaps immediately"
+            help="Show the output heatmaps after finishing"
         )
         parser.add_argument(
             "--file-prefix",
@@ -98,12 +111,16 @@ class Parser(object):
         self.num_steps = args.NUM_STEPS
         self.step_size = args.STEP_SIZE
         self.periodic = args.PERIODIC
+        self.algorithm = args.ALGORITHM
         self.show = args.SHOW
+        self.plot_step_interval = args.PLOT_STEP_INTERVAL
         self.file_prefix = args.PREFIX
         self.file_formats = args.FORMATS
         self.initial_states = args.INITIAL_STATES
         if not isinstance(self.initial_states, list):
             self.initial_states = [self.initial_states]
+
+        self.plot_steps = self.num_steps // self.plot_step_interval
 
     @classmethod
     def instance(cls):

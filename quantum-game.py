@@ -14,7 +14,8 @@ state_vectors = [getattr(states, name)() for name in args.initial_states]
 
 results = Time_Evolution.evolve(
     states=state_vectors,
-    hamiltonian=mpo
+    hamiltonian=mpo,
+    algorithm=args.algorithm
 )
 
 # Create one plot for each format specified
@@ -25,11 +26,12 @@ for index, result in enumerate(results):
             args.file_prefix + str(index) + "." + format
         )
         heatmaps = [
-            result.classical,
             result.population,
             result.d_population,
             result.single_site_entropy
         ]
+        if result.classical is not None:
+            heatmaps = [result.classical] + heatmaps
         # Save the plots to files
         plot.plot(heatmaps=heatmaps, path=path)
         if args.show:

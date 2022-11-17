@@ -32,7 +32,7 @@ def plot(heatmaps, path):
 
     else:
         _, height = plt.rcParams.get("figure.figsize")
-        ratio = args.num_steps / (len(heatmaps) * args.rules.ncells)
+        ratio = args.plot_steps / (len(heatmaps) * args.rules.ncells)
         ratio = max(ratio, 1.)
         fig, axs = plt.subplots(
             len(heatmaps),
@@ -48,14 +48,14 @@ def plot(heatmaps, path):
                 vmin=0.,
                 vmax=1.
             )
-            if args.num_steps < 50:
+            if args.plot_steps < 50:
                 axs[index].set_aspect("equal")
 
         fig.colorbar(pcm, ax=axs[:])
 
         # I use subplots_adjust to move the colorbar closer to the heatmaps
         # I don't know why, but .77 and .78 seem to give good results for their respective num_cells-ranges
-        if args.num_steps <= 200:
+        if args.plot_steps <= 200:
             plt.subplots_adjust(right=.77)
         else:
             plt.subplots_adjust(right=.78)
