@@ -54,7 +54,8 @@ class Parser(object):
             "--algorithm",
             dest="ALGORITHM",
             default="exact",
-            choices=["exact", "tdvp"]
+            choices=["exact", "tdvp"],
+            help="The algorithm used for the time evolution. Use 'exact' for a small number of cells, otherwise 'tdvp'"
         )
         parser.add_argument(
             "--step-size",
