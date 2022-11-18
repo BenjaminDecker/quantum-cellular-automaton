@@ -121,6 +121,8 @@ class Parser(object):
             self.initial_states = [self.initial_states]
 
         self.plot_steps = self.num_steps // self.plot_step_interval
+        if self.num_steps % self.plot_step_interval > 0:
+            self.plot_steps += 1
 
     @classmethod
     def instance(cls):
