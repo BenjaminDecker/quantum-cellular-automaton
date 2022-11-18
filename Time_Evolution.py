@@ -3,7 +3,7 @@ from MPS import MPS
 from parameters import Parser
 import numpy as np
 from constants import PROJECTION_KET_1
-from scipy.linalg import expm, logm
+from scipy.linalg import logm
 import warnings
 
 args = Parser.instance()
@@ -207,7 +207,7 @@ class Time_Evolution(object):
             H_eff.shape[3] * H_eff.shape[4] * H_eff.shape[5]
         ))
         t = (np.pi / 2) * step_size
-        U_eff = expm(-(1j) * t * H_eff)
+        U_eff = cls.calculate_U(H_eff, t)
         shape = A.shape
         new_A = np.reshape(A, -1)
         new_A = np.tensordot(new_A, U_eff, (0, 0))
@@ -231,7 +231,7 @@ class Time_Evolution(object):
             H_eff.shape[2] * H_eff.shape[3]
         ))
         t = (np.pi / 2) * step_size
-        U_eff = expm(-(1j) * t * H_eff)
+        U_eff = cls.calculate_U(H_eff, t)
         shape = C.shape
         new_C = np.reshape(C, -1)
         new_C = np.tensordot(new_C, U_eff, (0, 0))
@@ -296,10 +296,16 @@ class Time_Evolution(object):
         )
         cls.R[site] = new_layer
 
+    @classmethod
+    def calculate_U(cls, H, step_size):
+        w, v = np.linalg.eigh(H)
+        w = np.exp(-(1j) * step_size * w)
+        return v @ np.diag(w) @ v.conj().T
+
     @ classmethod
     def prepare_exact(cls, step_size):
         t = (np.pi / 2) * step_size
-        cls.U = expm(-(1j) * t * cls.hamiltonian.asMatrix())
+        cls.U = cls.calculate_U(cls.hamiltonian.asMatrix(), t)
 
     @ classmethod
     def prepare_tdvp(cls, state: MPS):
