@@ -252,50 +252,49 @@ class Time_Evolution(object):
             return cls.R[site]
 
     @ classmethod
-    def form_new_layer(cls, A, site):
-        # TODO optimize comtraction order
-        """
-        Form a new layer to be contracted with one of the sides of H_eff
-        """
-        # Contract physical leg of A with first physical leg of hamiltonian.A
-        new_layer = np.tensordot(
-            A,
-            cls.hamiltonian.A[site],
-            (0, 0)
-        )
-        # Contract second physical leg of hamiltonian.A with physical leg of A.conj()
-        new_layer = np.tensordot(
-            new_layer,
-            A.conj(),
-            (2, 0)
-        )
-        return new_layer
-
-    @ classmethod
     def calculate_layer_left(cls, A, site):
         """
         Calculates H_eff on the left of the given site by adding one layer, given the left-orthogonal tensor A one to the left of the given site, and saving the result to cls.L
         """
-        new_layer = cls.form_new_layer(A, site)
         # Contract the new layer with the rest of the left side of H_eff
-        cls.L[site] = np.tensordot(
-            new_layer,
+        new_layer = np.tensordot(
+            A.conj(),
             cls.get_layer_left(site - 1),
-            ((0, 2, 4), (0, 1, 2))
+            (1, 2)
         )
+        new_layer = np.tensordot(
+            cls.hamiltonian.A[site],
+            new_layer,
+            ((1, 2), (0, 3))
+        )
+        new_layer = np.tensordot(
+            A,
+            new_layer,
+            ((0, 1), (0, 3))
+        )
+        cls.L[site] = new_layer
 
     @ classmethod
     def calculate_layer_right(cls, A, site):
         """
         Calculates H_eff on the right of the given site by adding one layer, given the right-orthogonal tensor A one to the right of the given site, and saving the result to cls.R
         """
-        new_layer = cls.form_new_layer(A, site)
-        # Contract the new layer with the rest of the right side of H_eff
-        cls.R[site] = np.tensordot(
-            new_layer,
+        new_layer = np.tensordot(
+            A.conj(),
             cls.get_layer_right(site + 1),
-            ((1, 3, 5), (0, 1, 2))
+            (2, 2)
         )
+        new_layer = np.tensordot(
+            cls.hamiltonian.A[site],
+            new_layer,
+            ((1, 3), (0, 3))
+        )
+        new_layer = np.tensordot(
+            A,
+            new_layer,
+            ((0, 2), (0, 3))
+        )
+        cls.R[site] = new_layer
 
     @ classmethod
     def prepare_exact(cls, step_size):
