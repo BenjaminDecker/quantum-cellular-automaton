@@ -40,3 +40,8 @@ Write to different file formats
 ```bash
 python quantum-game.py --show --file-formats html svg pdf
 ```
+
+Try different algorithms (This can take a while)
+```bash
+python quantum-game.py --show --algorithm tdvp --num-steps 100
+```
