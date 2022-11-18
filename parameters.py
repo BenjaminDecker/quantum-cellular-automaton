@@ -71,6 +71,12 @@ class Parser(object):
             help="Amount of time steps after which a step is plotted to the output"
         )
         parser.add_argument(
+            "--plot-classical",
+            dest="PLOT_CLASSICAL",
+            action="store_true",
+            help="Plot the classical non-quantum time evolution"
+        )
+        parser.add_argument(
             "--show",
             dest="SHOW",
             action="store_true",
@@ -112,6 +118,7 @@ class Parser(object):
         self.step_size = args.STEP_SIZE
         self.periodic = args.PERIODIC
         self.algorithm = args.ALGORITHM
+        self.plot_classical = args.PLOT_CLASSICAL
         self.show = args.SHOW
         self.plot_step_interval = args.PLOT_STEP_INTERVAL
         self.file_prefix = args.PREFIX

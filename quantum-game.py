@@ -25,13 +25,14 @@ for index, result in enumerate(results):
             os.getcwd(),
             args.file_prefix + str(index) + "." + format
         )
-        heatmaps = [
+        heatmaps = []
+        if args.plot_classical:
+            heatmaps.append(result.classical)
+        heatmaps += [
             result.population,
             result.d_population,
             result.single_site_entropy
         ]
-        if result.classical is not None:
-            heatmaps = [result.classical] + heatmaps
         # Save the plots to files
         plot.plot(heatmaps=heatmaps, path=path)
         if args.show:

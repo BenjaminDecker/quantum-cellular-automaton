@@ -74,7 +74,7 @@ class Time_Evolution(object):
 
             classical = None
 
-            if args.plot_step_interval * args.plot_steps == args.num_steps:
+            if args.plot_classical:
                 classical = cls.classical(first_column=population[0, :])
             results.append(Result(
                 classical=classical,
