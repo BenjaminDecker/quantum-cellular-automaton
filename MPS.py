@@ -56,7 +56,7 @@ class MPS(object):
         return s
 
     @classmethod
-    def from_density_distribution(cls, plist, bond_dim=args.rules.ncells):
+    def from_density_distribution(cls, plist, bond_dim=int(args.rules.ncells * np.log(args.rules.ncells))):
         """
         Constructs a MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
         """
