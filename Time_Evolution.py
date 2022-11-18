@@ -146,11 +146,11 @@ class Time_Evolution(object):
         state.make_site_canonical(0)
         # ----------sweep-right----------
         for site in range(len(state.A) - 1):
-            new_A = cls.evolve_site(state.A[site], site, step_size)
+            new_A = cls.evolve_site(state.A[site], site, step_size / 2)
             new_A, bond = state.left_qr_tensors(new_A)
             state.A[site] = new_A
             cls.calculate_layer_left(new_A, site)
-            new_bond = cls.evolve_bond(bond, site, step_size)
+            new_bond = cls.evolve_bond(bond, site, -step_size / 2)
             state.A[site + 1] = np.transpose(np.tensordot(
                 new_bond,
                 state.A[site + 1],
@@ -159,17 +159,17 @@ class Time_Evolution(object):
         state.A[len(state.A) - 1] = cls.evolve_site(
             state.A[len(state.A) - 1],
             len(state.A) - 1,
-            step_size
+            step_size / 2
         )
         # ----------sweep-right----------
 
         # ----------sweep-left-----------
         for site in reversed(range(1, len(state.A))):
-            new_A = cls.evolve_site(state.A[site], site, step_size)
+            new_A = cls.evolve_site(state.A[site], site, step_size / 2)
             new_A, bond = state.right_qr_tensors(new_A)
             state.A[site] = new_A
             cls.calculate_layer_right(new_A, site)
-            new_bond = cls.evolve_bond(bond, site - 1, step_size)
+            new_bond = cls.evolve_bond(bond, site - 1, -step_size / 2)
             state.A[site - 1] = np.tensordot(
                 state.A[site - 1],
                 new_bond,
@@ -178,7 +178,7 @@ class Time_Evolution(object):
         state.A[0] = cls.evolve_site(
             state.A[0],
             0,
-            step_size
+            step_size / 2
         )
         # ----------sweep-left---------
 
@@ -186,6 +186,9 @@ class Time_Evolution(object):
 
     @ classmethod
     def evolve_site(cls, A, site, step_size):
+        """
+        Calculates the time evolution over the given time step for site tensor A at the given site
+        """
         layer_left = cls.get_layer_left(site - 1)
         layer_right = cls.get_layer_right(site + 1)
         H_eff = np.tensordot(
@@ -203,7 +206,7 @@ class Time_Evolution(object):
             H_eff.shape[0] * H_eff.shape[1] * H_eff.shape[2],
             H_eff.shape[3] * H_eff.shape[4] * H_eff.shape[5]
         ))
-        t = ((np.pi / 2) * step_size) / 2
+        t = (np.pi / 2) * step_size
         U_eff = expm(-(1j) * t * H_eff)
         shape = A.shape
         new_A = np.reshape(A, -1)
@@ -211,7 +214,10 @@ class Time_Evolution(object):
         return np.reshape(new_A, shape)
 
     @ classmethod
-    def evolve_bond(cls, bond, site, step_size):
+    def evolve_bond(cls, C, site, step_size):
+        """
+        Calculates the time evolution over the given time step for bond tensor C between the given site and the next
+        """
         layer_left = cls.get_layer_left(site)
         layer_right = cls.get_layer_right(site + 1)
         H_eff = np.tensordot(
@@ -224,12 +230,12 @@ class Time_Evolution(object):
             H_eff.shape[0] * H_eff.shape[1],
             H_eff.shape[2] * H_eff.shape[3]
         ))
-        t = -((np.pi / 2) * step_size) / 2
+        t = (np.pi / 2) * step_size
         U_eff = expm(-(1j) * t * H_eff)
-        shape = bond.shape
-        new_bond = np.reshape(bond, -1)
-        new_bond = np.tensordot(new_bond, U_eff, (0, 0))
-        return np.reshape(new_bond, shape)
+        shape = C.shape
+        new_C = np.reshape(C, -1)
+        new_C = np.tensordot(new_C, U_eff, (0, 0))
+        return np.reshape(new_C, shape)
 
     @ classmethod
     def get_layer_left(cls, site):
