@@ -300,7 +300,7 @@ class Time_Evolution(object):
     def calculate_U(cls, H, step_size):
         w, v = np.linalg.eigh(H)
         w = np.exp(-(1j) * step_size * w)
-        return v @ np.diag(w) @ v.conj().T
+        return (w * v) @ v.conj().T
 
     @ classmethod
     def prepare_exact(cls, step_size):
