@@ -1,6 +1,8 @@
 import numpy as np
-from parameters import Rules
-from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR
+from parameters import Rules, Parser
+from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR, KET_0
+
+args = Parser.instance()
 
 IDENTITY = np.eye(2)
 
@@ -130,7 +132,8 @@ class StateAutomaton(object):
                 index=edge_index
             ))
 
-        # Insert an edge with a ket-0-projector operator, if valid. This is only the case if there is enough length left to add necessary ket-1-projectors reach a final state
+        # Insert an edge with a ket-0-projector operator, if valid. This is only the case if there is enough length
+        # left to add necessary ket-1-projectors reach a final state
         remaining_ops = self.max_ops_per_path - state_data.num_ops
         if state_data.ket_1_ops + (remaining_ops - 1) >= self.rules.activation_interval.start:
             edge_index = self.find_or_insert_recursive(StateData(
@@ -148,32 +151,48 @@ class StateAutomaton(object):
 
 class MPO(object):
 
-    def __init__(self, D):
-        """
-        Create a matrix product operator.
-        """
-        # leading and trailing bond dimensions must agree (typically 1)
-        assert D[0] == D[-1]
-        self.A = [np.zeros((2, 2, D[i], D[i+1])) for i in range(len(D)-1)]
-
     @classmethod
     def hamiltonian_from_rules(cls, rules: Rules):
         state_automaton = StateAutomaton(rules=rules)
         num_states = len(state_automaton.states)
-        D = [1] + [num_states for _ in range(rules.ncells - 1)] + [1]
-        mpo = cls(D)
 
-        tensor = np.reshape(
-            np.zeros(num_states**2 * 2**2),
-            (2, 2, num_states, num_states)
-        )
+        tensor = np.zeros((2, 2, num_states, num_states), dtype=np.complex)
         for (index, state) in enumerate(state_automaton.states):
             for edge in state.edges:
                 tensor[:, :, edge.index, index] += edge.operator
-        mpo.A[0][:, :, 0, :] = tensor[:, :, -1, :]
-        for i in range(1, len(D) - 2):
-            mpo.A[i] = tensor
-        mpo.A[-1][:, :, :, 0] = tensor[:, :, :, 0]
+
+        mpo = cls()
+        mpo.A = []
+        for _ in range(rules.ncells):
+            mpo.A.append(tensor)
+
+        if rules.periodic:
+            left = np.eye(tensor.shape[3], tensor.shape[2])
+            left[-1, -1] = 0.
+            left[-1, 0] = 1.
+            mpo.A[0] = (np.tensordot(left, tensor, (1, 2))
+                        .transpose((1, 2, 0, 3)))
+        else:
+            left = np.zeros((1, tensor.shape[2]))
+            left[:, -1] = 1.
+            right = np.zeros((tensor.shape[3], 1))
+            right[0, :] = 1.
+            boundary_tensor = np.tensordot(
+                np.tensordot(
+                    tensor,
+                    KET_0,
+                    (0, 0)
+                ),
+                KET_0,
+                (0, 0)
+            )
+            for _ in range(rules.distance):
+                left = np.tensordot(left, boundary_tensor, (1, 0))
+                right = np.tensordot(boundary_tensor, right, (1, 0))
+            mpo.A[0] = (np.tensordot(left, tensor, (1, 2))
+                        .transpose((1, 2, 0, 3)))
+            mpo.A[-1] = np.tensordot(tensor, right, (3, 0))
+
         return mpo
 
     @classmethod

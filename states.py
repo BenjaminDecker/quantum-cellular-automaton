@@ -30,6 +30,11 @@ def single_bottom():
     return single(args.rules.distance)
 
 
+def all_ket_0():
+    plist = [0.] * args.rules.ncells
+    return MPS.from_density_distribution(plist=plist)
+
+
 def all_ket_1():
     plist = [1.] * args.rules.ncells
     return MPS.from_density_distribution(plist=plist)

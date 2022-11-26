@@ -51,7 +51,7 @@ class Time_Evolution(object):
 
             site_canonical_hint = None
             for step in range(args.num_steps):
-                if step % 10 == 0:
+                if step % 100 == 0:
                     print("Step " + str(step) + " of " + str(args.num_steps))
                 if step % args.plot_step_interval == 0:
                     plot_step = step // args.plot_step_interval
@@ -91,7 +91,7 @@ class Time_Evolution(object):
         Measures the population, rounded population and single-site entropy of the given state and writes the results into the given arrays
         """
         # If no site hint is given or if site hint is invalid, start with the center tensor at site 0
-        if site_canonical_hint == None:
+        if site_canonical_hint is None:
             state.make_site_canonical(0)
         backwards = site_canonical_hint == "last"
         site_range = range(len(state.A))
@@ -299,7 +299,7 @@ class Time_Evolution(object):
     @classmethod
     def calculate_U(cls, H, step_size):
         w, v = np.linalg.eigh(H)
-        w = np.exp(-(1j) * step_size * w)
+        w = np.exp(-1j * step_size * w)
         return (w * v) @ v.conj().T
 
     @ classmethod
@@ -333,11 +333,13 @@ class Time_Evolution(object):
         classical[:, 0] = first_column[0]
         classical[:, -1] = first_column[-1]
         for step in range(1, args.plot_steps):
-            for site in range(args.rules.distance, len(first_column) - args.rules.distance):
+            for site in range(len(first_column)):
                 sum = 0.
                 for offset in range(-args.rules.distance, args.rules.distance + 1):
                     if offset != 0:
-                        sum += classical[step - 1, (site + offset)]
+                        index = site + offset
+                        if 0 <= index < len(first_column):
+                            sum += classical[step - 1, index]
                 if sum in args.rules.activation_interval:
                     classical[step, site] = 1. - classical[step - 1, site]
                 else:

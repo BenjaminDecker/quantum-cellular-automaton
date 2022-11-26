@@ -2,10 +2,11 @@ import argparse
 
 
 class Rules(object):
-    def __init__(self, ncells: int, activation_interval: range, distance: int) -> None:
+    def __init__(self, ncells: int, activation_interval: range, distance: int, periodic: bool) -> None:
         self.ncells = ncells
         self.activation_interval = activation_interval
         self.distance = distance
+        self.periodic = periodic
 
 
 class Parser(object):
@@ -48,7 +49,7 @@ class Parser(object):
             "--periodic",
             dest="PERIODIC",
             action="store_true",
-            help="Use periodic instead of constant boundary conditions"
+            help="Use periodic instead of constant boundary conditions (experimental)"
         )
         parser.add_argument(
             "--algorithm",
@@ -103,7 +104,7 @@ class Parser(object):
             dest="INITIAL_STATES",
             nargs="+",
             default=["blinker"],
-            choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_1", "all_ket_1_but_outer",
+            choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_0", "all_ket_1", "all_ket_1_but_outer",
                      "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
             help="List of initial states"
         )
@@ -113,11 +114,11 @@ class Parser(object):
         self.rules = Rules(
             ncells=args.NUM_CELLS,
             activation_interval=range(args.INTERVAL[0], args.INTERVAL[1]),
-            distance=args.DISTANCE
+            distance=args.DISTANCE,
+            periodic=args.PERIODIC
         )
         self.num_steps = args.NUM_STEPS
         self.step_size = args.STEP_SIZE
-        self.periodic = args.PERIODIC
         self.algorithm = args.ALGORITHM
         self.plot_classical = args.PLOT_CLASSICAL
         self.show = args.SHOW
