@@ -20,7 +20,8 @@ class Parser(object):
             dest="NUM_CELLS",
             type=int,
             default=9,
-            help="The number of cells to use in the simulation. Computation running time scales exponentially with NUM_CELLS. Anything higher than 11 takes a lot of time and memory to compute."
+            help="The number of cells to use in the simulation. Computation running time scales exponentially with "
+                 "NUM_CELLS. Anything higher than 11 takes a lot of time and memory to compute. "
         )
         parser.add_argument(
             "--distance",
@@ -104,9 +105,16 @@ class Parser(object):
             dest="INITIAL_STATES",
             nargs="+",
             default=["blinker"],
-            choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_0", "all_ket_1", "all_ket_1_but_outer",
-                     "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
+            choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_0", "all_ket_1",
+                     "all_ket_1_but_outer", "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
             help="List of initial states"
+        )
+        parser.add_argument(
+            "--bond-dim",
+            dest="BOND_DIM",
+            type=int,
+            default=5,
+            help="The bond dimension to use for the initial states. Only relevant for the tdvp algorithm."
         )
 
         args = parser.parse_args()
@@ -128,6 +136,7 @@ class Parser(object):
         self.initial_states = args.INITIAL_STATES
         if not isinstance(self.initial_states, list):
             self.initial_states = [self.initial_states]
+        self.bond_dim = args.BOND_DIM
 
         self.plot_steps = self.num_steps // self.plot_step_interval
         if self.num_steps % self.plot_step_interval > 0:
