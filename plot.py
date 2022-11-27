@@ -55,9 +55,10 @@ def plot(heatmaps, path):
 
         # I use subplots_adjust to move the colorbar closer to the heatmaps
         # I don't know why, but .77 and .78 seem to give good results for their respective plot_step-ranges
-        if args.plot_steps <= 200:
-            plt.subplots_adjust(right=.77)
-        else:
-            plt.subplots_adjust(right=.78)
+        if args.rules.ncells < 15:
+            if args.plot_steps <= 200:
+                plt.subplots_adjust(right=.77)
+            else:
+                plt.subplots_adjust(right=.78)
 
         plt.savefig(path, bbox_inches="tight")
