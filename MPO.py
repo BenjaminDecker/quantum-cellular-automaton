@@ -1,6 +1,7 @@
 import numpy as np
-from parameters import Rules, Parser
+
 from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR, KET_0
+from parameters import Rules, Parser
 
 args = Parser.instance()
 
@@ -17,9 +18,9 @@ class StateData(object):
         if not isinstance(other, StateData):
             return False
         return (
-            self.ket_1_ops == other.ket_1_ops and
-            self.ket_0_ops == other.ket_0_ops and
-            self.s == other.s
+                self.ket_1_ops == other.ket_1_ops and
+                self.ket_0_ops == other.ket_0_ops and
+                self.s == other.s
         )
 
     @classmethod

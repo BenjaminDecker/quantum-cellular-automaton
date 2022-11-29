@@ -1,7 +1,9 @@
 from random import random
-from parameters import Parser
-from MPS import MPS
+
 import numpy as np
+
+from MPS import MPS
+from parameters import Parser
 
 args = Parser.instance()
 

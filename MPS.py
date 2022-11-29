@@ -1,4 +1,5 @@
 import numpy as np
+
 from parameters import Parser
 
 # Most of the code of this file is adapted from the tensor network lecture by Prof. Christian Mendl

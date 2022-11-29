@@ -1,8 +1,10 @@
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-from parameters import Parser
 import os
+
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+from parameters import Parser
 
 args = Parser.instance()
 
