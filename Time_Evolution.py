@@ -65,6 +65,7 @@ class Time_Evolution(object):
                         single_site_entropy=single_site_entropy[plot_step, :],
                         site_canonical_hint=site_canonical_hint
                     )
+                    state.write_to_file(F"data/{algorithm}.npz")
                 if algorithm == 'exact':
                     if step % args.plot_step_interval == 0:
                         state = cls.exact_step(state)
