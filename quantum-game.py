@@ -1,16 +1,21 @@
-from MPO import MPO
-import states
-from parameters import Parser
-import webbrowser
-import plot
 import os
+import webbrowser
+
+import plot
+import states
+from MPO import MPO
+from MPS import MPS
 from Time_Evolution import Time_Evolution
+from parameters import Parser
 
 args = Parser.instance()
 
 mpo = MPO.hamiltonian_from_rules(args.rules)
 
-state_vectors = [getattr(states, name)() for name in args.initial_states]
+state_vectors = (
+        [getattr(states, name)() for name in args.initial_states] +
+        [MPS.from_file(file) for file in args.initial_state_files]
+)
 
 results = Time_Evolution.evolve(
     states=state_vectors,

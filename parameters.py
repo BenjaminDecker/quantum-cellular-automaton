@@ -110,6 +110,13 @@ class Parser(object):
             help="List of initial states"
         )
         parser.add_argument(
+            "--initial-state-files",
+            dest="INITIAL_STATE_FILES",
+            nargs="*",
+            help="List of .npz files containing mps initial states as created by np.savez(file, *Alist), where Alist is"
+                 "a list of MPS tensors. The number of sites of the mps must be the same as specified with --num-cells."
+        )
+        parser.add_argument(
             "--bond-dim",
             dest="BOND_DIM",
             type=int,
@@ -134,10 +141,10 @@ class Parser(object):
         self.plot_file_path = args.PLOT_FILE_PATH
         self.file_formats = args.FORMATS
         self.initial_states = args.INITIAL_STATES
-        if not isinstance(self.initial_states, list):
-            self.initial_states = [self.initial_states]
+        self.initial_state_files = args.INITIAL_STATE_FILES
+        if self.initial_state_files is None:
+            self.initial_state_files = []
         self.bond_dim = args.BOND_DIM
-
         self.plot_steps = self.num_steps // self.plot_step_interval
         if self.num_steps % self.plot_step_interval > 0:
             self.plot_steps += 1
