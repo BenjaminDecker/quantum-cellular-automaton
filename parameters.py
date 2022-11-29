@@ -86,10 +86,10 @@ class Parser(object):
             help="Show the output heatmaps after finishing"
         )
         parser.add_argument(
-            "--file-prefix",
-            dest="PREFIX",
-            default="plot",
-            help="Write to files with specified filename-prefix"
+            "--plot-file-path",
+            dest="PLOT_FILE_PATH",
+            default="plots/plot",
+            help="Write to files at specified relative location, including file prefix"
         )
         parser.add_argument(
             "--file-formats",
@@ -131,7 +131,7 @@ class Parser(object):
         self.plot_classical = args.PLOT_CLASSICAL
         self.show = args.SHOW
         self.plot_step_interval = args.PLOT_STEP_INTERVAL
-        self.file_prefix = args.PREFIX
+        self.plot_file_path = args.PLOT_FILE_PATH
         self.file_formats = args.FORMATS
         self.initial_states = args.INITIAL_STATES
         if not isinstance(self.initial_states, list):

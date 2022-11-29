@@ -23,7 +23,7 @@ for index, result in enumerate(results):
     for format in args.file_formats:
         path = os.path.join(
             os.getcwd(),
-            args.file_prefix + str(index) + "." + format
+            args.plot_file_path + str(index) + "." + format
         )
         heatmaps = []
         if args.plot_classical:
