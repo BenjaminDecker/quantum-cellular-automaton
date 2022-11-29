@@ -50,6 +50,7 @@ class Time_Evolution(object):
                 cls.prepare_tdvp(state)
 
             site_canonical_hint = None
+
             for step in range(args.num_steps):
                 if step % 100 == 0:
                     print("Step " + str(step) + " of " + str(args.num_steps))

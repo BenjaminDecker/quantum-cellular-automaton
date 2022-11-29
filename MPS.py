@@ -11,65 +11,66 @@ def crandn(size):
     Draw random samples from the standard complex normal (Gaussian) distribution.
     """
     # 1/sqrt(2) is a normalization factor
-    return (np.random.normal(size=size) + 1j*np.random.normal(size=size)) / np.sqrt(2)
+    return (np.random.normal(size=size) + 1j * np.random.normal(size=size)) / np.sqrt(2)
 
 
 class MPS(object):
     """
     Matrix product state (MPS) class.
 
-    The i-th MPS tensor has dimension `[d, D[i], D[i+1]]` with `d` the physical dimension at each site and `D` the list of virtual bond dimensions.
+    The i-th MPS tensor has dimension `[d, D[i], D[i+1]]` with `d` the physical dimension at each site and `D` the
+    list of virtual bond dimensions.
     """
 
-    def __init__(self, d, D, fill='zero'):
-        """
-        Create a matrix product state.
-        """
-        self.d = d
-        # leading and trailing bond dimensions must agree (typically 1)
-        assert D[0] == D[-1]
-        if fill == 'zero':
-            self.A = [np.zeros((d, D[i], D[i+1])) for i in range(len(D)-1)]
-        elif fill == 'random real':
-            # random real entries
-            self.A = [
-                np.random.normal(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
-            ]
-        elif fill == 'random complex':
-            # random complex entries
-            self.A = [
-                crandn(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
-            ]
-        else:
-            raise ValueError('fill = {} invalid.'.format(fill))
+    A: list[np.ndarray]
+
+    def __init__(self, Alist: list[np.ndarray]):
+        self.A = Alist
+
+    # def __init__(self, d, D, fill='zero'):
+    #     """
+    #     Create a matrix product state.
+    #     """
+    #     self.d = d
+    #     # leading and trailing bond dimensions must agree (typically 1)
+    #     assert D[0] == D[-1]
+    #     if fill == 'zero':
+    #         self.A = [np.zeros((d, D[i], D[i+1])) for i in range(len(D)-1)]
+    #     elif fill == 'random real':
+    #         # random real entries
+    #         self.A = [
+    #             np.random.normal(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
+    #         ]
+    #     elif fill == 'random complex':
+    #         # random complex entries
+    #         self.A = [
+    #             crandn(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
+    #         ]
+    #     else:
+    #         raise ValueError('fill = {} invalid.'.format(fill))
 
     @classmethod
     def from_tensors(cls, Alist):
         """
-        Construct a MPS from a list of tensors.
+        Construct an MPS from a list of tensors.
         """
-        # create a MPS with dummy tensors
-        s = cls(2, (len(Alist) + 1) * [1])
-        # assign the actual tensors from `Alist`
-        s.A = [np.array(A) for A in Alist]
-        s.d = s.A[0].shape[0]
-        return s
+        return cls(Alist=[np.array(A) for A in Alist])
 
     @classmethod
     def from_density_distribution(cls, plist, bond_dim=args.bond_dim):
         """
-        Constructs a MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
+        Constructs an MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
         """
         left = np.zeros((2, 1, bond_dim))
-        left[:, 0, 0] = np.array([(1. - plist[0])**.5, plist[0]**.5])
+        left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5])
         right = np.zeros((2, bond_dim, 1))
-        right[:, 0, 0] = np.array([(1. - plist[-1])**.5, plist[-1]**.5])
+        right[:, 0, 0] = np.array([(1. - plist[-1]) ** .5, plist[-1] ** .5])
         if len(plist) == 1:
             return cls.from_tensors(Alist=[left[:, :, :]])
         Alist = [left]
         for i in range(1, len(plist) - 1):
             tensor = np.zeros((2, bond_dim, bond_dim))
-            tensor[:, 0, 0] = np.array([(1. - plist[i])**.5, (plist[i])**.5])
+            tensor[:, 0, 0] = np.array([(1. - plist[i]) ** .5, (plist[i]) ** .5])
             Alist.append(tensor)
         Alist.append(right)
         return cls.from_tensors(Alist=Alist)
@@ -77,7 +78,7 @@ class MPS(object):
     @classmethod
     def from_vector(cls, psi):
         """
-        Creates a MPS from a full state vector array.
+        Creates an MPS from a full state vector array.
         """
         Alist = []
         psi = np.array(psi)
@@ -99,7 +100,7 @@ class MPS(object):
     def left_qr_tensors(cls, A):
         s = A.shape
         assert s[2] > 1
-        Q, R = np.linalg.qr(np.reshape(A, (s[0]*s[1], s[2])))
+        Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])))
         Q = np.reshape(Q, (s[0], s[1], -1))
         return Q, R
 
@@ -111,6 +112,17 @@ class MPS(object):
         A_new = np.transpose(A_new, (0, 2, 1))
         R_new = np.transpose(R_new, (1, 0))
         return A_new, R_new
+
+    @classmethod
+    def from_file(cls, path: str):
+        with open(path, 'rb') as f:
+            Adict = np.load(f)
+            Alist = [Adict[F"arr_{i}"] for i in range(len(Adict.files))]
+            return cls(Alist=Alist)
+
+    def write_to_file(self, path: str):
+        with open(path, 'wb') as f:
+            np.savez(f, *self.A)
 
     def orthonormalize_left_qr(self, i):
         """
