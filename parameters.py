@@ -43,7 +43,7 @@ class Parser(object):
             "--num-steps",
             dest="NUM_STEPS",
             type=int,
-            default=1000,
+            default=10000,
             help="Number of time steps to simulate"
         )
         parser.add_argument(
@@ -63,14 +63,14 @@ class Parser(object):
             "--step-size",
             dest="STEP_SIZE",
             type=float,
-            default=.1,
+            default=.01,
             help="Size of one time step. The time step size is calculated as (STEP_SIZE * pi/2)"
         )
         parser.add_argument(
             "--plot-step-interval",
             dest="PLOT_STEP_INTERVAL",
             type=int,
-            default=10,
+            default=100,
             help="Amount of time steps after which a step is plotted to the output"
         )
         parser.add_argument(
