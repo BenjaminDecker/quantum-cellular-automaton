@@ -1,5 +1,9 @@
-import numpy as np
+import warnings
 
+import numpy as np
+from scipy.linalg import logm
+
+from constants import PROJECTION_KET_1
 from parameters import Parser
 
 # Most of the code of this file is adapted from the tensor network lecture by Prof. Christian Mendl
@@ -23,32 +27,10 @@ class MPS(object):
     list of virtual bond dimensions.
     """
 
-    A: list[np.ndarray]
+    A: list[np.ndarray] = []
 
     def __init__(self, Alist: list[np.ndarray]):
         self.A = Alist
-
-    # def __init__(self, d, D, fill='zero'):
-    #     """
-    #     Create a matrix product state.
-    #     """
-    #     self.d = d
-    #     # leading and trailing bond dimensions must agree (typically 1)
-    #     assert D[0] == D[-1]
-    #     if fill == 'zero':
-    #         self.A = [np.zeros((d, D[i], D[i+1])) for i in range(len(D)-1)]
-    #     elif fill == 'random real':
-    #         # random real entries
-    #         self.A = [
-    #             np.random.normal(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
-    #         ]
-    #     elif fill == 'random complex':
-    #         # random complex entries
-    #         self.A = [
-    #             crandn(size=(d, D[i], D[i+1])) / np.sqrt(d*D[i]*D[i+1]) for i in range(len(D)-1)
-    #         ]
-    #     else:
-    #         raise ValueError('fill = {} invalid.'.format(fill))
 
     @classmethod
     def from_tensors(cls, Alist):
@@ -97,8 +79,9 @@ class MPS(object):
 
         return cls.from_tensors(Alist=Alist)
 
+    # TODO find better name
     @classmethod
-    def left_qr_tensors(cls, A):
+    def left_qr_tensors(cls, A: np.ndarray):
         s = A.shape
         assert s[2] > 1
         Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])))
@@ -120,6 +103,44 @@ class MPS(object):
             Adict = np.load(f)
             Alist = [Adict[F"arr_{i}"] for i in range(len(Adict.files))]
             return cls(Alist=Alist)
+
+    def measure(self, population, d_population, single_site_entropy):
+        """
+        Measures the population, rounded population and single-site entropy of the given state and writes the results
+        into the given arrays
+        """
+        # Start with the orthogonality center at site 0
+        self.make_site_canonical(0)
+        first = True
+        for site in range(len(self.A)):
+            # In every iteration except the first, shift the center tensor one site to the left/right
+            if first:
+                first = False
+            else:
+                self.orthonormalize_left_qr(site - 1)
+
+            A = self.A[site]
+
+            # Calculate the population density
+            density_matrix = np.tensordot(
+                A,
+                A.conj(),
+                ((1, 2), (1, 2))
+            )
+            result = np.tensordot(
+                density_matrix,
+                PROJECTION_KET_1,
+                ((0, 1), (0, 1))
+            ).real
+            population[site] = result
+            d_population[site] = np.round(result)
+            # Calculate the single-site entropy
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                single_site_entropy[site] = (-np.trace(np.dot(
+                    density_matrix,
+                    logm(density_matrix) / np.log(2)
+                ))).real
 
     def write_to_file(self, path: str):
         with open(path, 'wb') as f:
@@ -182,3 +203,8 @@ class MPS(object):
         # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
         psi = np.trace(psi, axis1=1, axis2=2)
         return psi
+
+    def print_shapes(self):
+        for A in self.A:
+            print(A.shape)
+        print("")

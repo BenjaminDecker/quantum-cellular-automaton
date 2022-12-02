@@ -2,8 +2,8 @@ from random import random
 
 import numpy as np
 
-from MPS import MPS
 from parameters import Parser
+from tensor_networks import MPS
 
 args = Parser.instance()
 

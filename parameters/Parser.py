@@ -1,12 +1,6 @@
 import argparse
 
-
-class Rules(object):
-    def __init__(self, ncells: int, activation_interval: range, distance: int, periodic: bool) -> None:
-        self.ncells = ncells
-        self.activation_interval = activation_interval
-        self.distance = distance
-        self.periodic = periodic
+import parameters
 
 
 class Parser(object):
@@ -126,7 +120,7 @@ class Parser(object):
 
         args = parser.parse_args()
 
-        self.rules = Rules(
+        self.rules = parameters.Rules(
             ncells=args.NUM_CELLS,
             activation_interval=range(args.INTERVAL[0], args.INTERVAL[1]),
             distance=args.DISTANCE,

@@ -1,6 +1,7 @@
 import numpy as np
 
-from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR, KET_0
+import constants
+from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR
 from parameters import Rules, Parser
 
 args = Parser.instance()
@@ -151,6 +152,10 @@ class StateAutomaton(object):
 
 
 class MPO(object):
+    W: list[np.ndarray] = []
+
+    def __init__(self, Wlist: list[np.ndarray]):
+        self.W = Wlist
 
     @classmethod
     def hamiltonian_from_rules(cls, rules: Rules):
@@ -162,17 +167,17 @@ class MPO(object):
             for edge in state.edges:
                 tensor[:, :, edge.index, index] += edge.operator
 
-        mpo = cls()
-        mpo.A = []
+        Wlist = []
         for _ in range(rules.ncells):
-            mpo.A.append(tensor)
+            Wlist.append(tensor)
 
         if rules.periodic:
-            left = np.eye(tensor.shape[3], tensor.shape[2])
-            left[-1, -1] = 0.
-            left[-1, 0] = 1.
-            mpo.A[0] = (np.tensordot(left, tensor, (1, 2))
-                        .transpose((1, 2, 0, 3)))
+            pass
+            # left = np.eye(tensor.shape[3], tensor.shape[2])
+            # left[-1, -1] = 0.
+            # left[-1, 0] = 1.
+            # mpo.A[0] = (np.tensordot(left, tensor, (1, 2))
+            #             .transpose((1, 2, 0, 3)))
         else:
             left = np.zeros((1, tensor.shape[2]))
             left[:, -1] = 1.
@@ -181,43 +186,43 @@ class MPO(object):
             boundary_tensor = np.tensordot(
                 np.tensordot(
                     tensor,
-                    KET_0,
+                    constants.KET_0,
                     (0, 0)
                 ),
-                KET_0,
+                constants.KET_0,
                 (0, 0)
             )
             for _ in range(rules.distance):
                 left = np.tensordot(left, boundary_tensor, (1, 0))
                 right = np.tensordot(boundary_tensor, right, (1, 0))
-            mpo.A[0] = (np.tensordot(left, tensor, (1, 2))
+            Wlist[0] = (np.tensordot(left, tensor, (1, 2))
                         .transpose((1, 2, 0, 3)))
-            mpo.A[-1] = np.tensordot(tensor, right, (3, 0))
+            Wlist[-1] = np.tensordot(tensor, right, (3, 0))
 
-        return mpo
+        return cls(Wlist)
 
     @classmethod
-    def merge_mpo_tensor_pair(cls, A0, A1):
+    def merge_mpo_tensor_pair(cls, W0, W1):
         """
         Merge two neighboring MPO tensors.
         """
-        A = np.tensordot(A0, A1, (3, 2))
+        W = np.tensordot(W0, W1, (3, 2))
         # pair original physical dimensions of A0 and A1
-        A = A.transpose((0, 3, 1, 4, 2, 5))
+        W = W.transpose((0, 3, 1, 4, 2, 5))
         # combine original physical dimensions
-        A = A.reshape((
-            A.shape[0] * A.shape[1],
-            A.shape[2] * A.shape[3],
-            A.shape[4],
-            A.shape[5]
+        W = W.reshape((
+            W.shape[0] * W.shape[1],
+            W.shape[2] * W.shape[3],
+            W.shape[4],
+            W.shape[5]
         ))
-        return A
+        return W
 
     def asMatrix(self):
         """Merge all tensors to obtain the matrix representation on the full Hilbert space."""
-        H = self.A[0]
-        for i in range(1, len(self.A)):
-            H = self.merge_mpo_tensor_pair(H, self.A[i])
+        H = self.W[0]
+        for i in range(1, len(self.W)):
+            H = self.merge_mpo_tensor_pair(H, self.W[i])
         # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
         H = np.trace(H, axis1=2, axis2=3)
         return H
