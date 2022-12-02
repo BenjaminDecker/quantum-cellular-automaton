@@ -143,6 +143,7 @@ class Parser(object):
         if self.num_steps % self.plot_step_interval > 0:
             self.plot_steps += 1
 
+    # TODO Pass a parser object around instead of using this global singleton
     @classmethod
     def instance(cls):
         try:
