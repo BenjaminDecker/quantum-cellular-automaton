@@ -2,9 +2,7 @@ import numpy as np
 
 import constants
 from constants import PROJECTION_KET_0, PROJECTION_KET_1, S_OPERATOR
-from parameters import Rules, Parser
-
-args = Parser.instance()
+from parameters import Rules
 
 IDENTITY = np.eye(2)
 

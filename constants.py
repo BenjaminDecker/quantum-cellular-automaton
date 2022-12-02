@@ -1,14 +1,8 @@
 import numpy as np
 
-from parameters import Parser
-
-args = Parser.instance()
-
 KET_0 = np.array([1., 0.])
 KET_1 = np.array([0., 1.])
 KET_PLUS = np.array([1., 1.]) / np.sqrt(2)
-
-DIM = 2 ** args.rules.ncells
 
 SWAP_GATE = np.array([
     [1., 0., 0., 0.],

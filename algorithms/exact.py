@@ -1,10 +1,10 @@
 import numpy as np
 
-import algorithms
+from algorithms import Algorithm
 from tensor_networks import MPS, MPO
 
 
-class Exact(algorithms.Algorithm):
+class Exact(Algorithm):
     """
     Evolves the quantum state by calculating a time evolution operator matrix and using explicit matrix vector product.
     Does not use any tensor network optimizations.

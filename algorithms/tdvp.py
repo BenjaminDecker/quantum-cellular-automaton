@@ -1,10 +1,10 @@
 import numpy as np
 
-import algorithms
+from algorithms import Algorithm
 from tensor_networks import MPS, MPO
 
 
-class TDVP(algorithms.Algorithm):
+class TDVP(Algorithm):
 
     def __init__(self, psi_0: MPS, H: MPO, step_size: float):
         """

@@ -1,3 +1,3 @@
-from .Algorithm import Algorithm
-from .Exact import Exact
-from .TDVP import TDVP
+from .algorithm import Algorithm
+from .exact import Exact
+from .tdvp import TDVP

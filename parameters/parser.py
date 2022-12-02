@@ -1,6 +1,6 @@
 import argparse
 
-import parameters
+from parameters import Rules
 
 
 class Parser(object):
@@ -120,7 +120,7 @@ class Parser(object):
 
         args = parser.parse_args()
 
-        self.rules = parameters.Rules(
+        self.rules = Rules(
             ncells=args.NUM_CELLS,
             activation_interval=range(args.INTERVAL[0], args.INTERVAL[1]),
             distance=args.DISTANCE,

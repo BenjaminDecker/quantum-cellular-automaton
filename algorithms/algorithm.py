@@ -13,13 +13,21 @@ class Algorithm(ABC):
 
     @abstractmethod
     def __init__(self, psi_0: MPS, H: MPO, step_size: float):
-        self._psi = psi_0
+        self.psi = psi_0
         self._H = H
         self._step_size = step_size
 
     @abstractmethod
     def do_time_step(self):
         pass
+
+    @property
+    def psi(self):
+        return self._psi
+
+    @psi.setter
+    def psi(self, value):
+        self._psi = value
 
     @classmethod
     def calculate_U(cls, H_matrix: np.ndarray, step_size: float) -> np.ndarray:

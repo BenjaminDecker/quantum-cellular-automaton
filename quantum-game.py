@@ -66,6 +66,7 @@ for index, initial_state in enumerate(initial_states):
                 d_population=d_population[plot_step, :],
                 single_site_entropy=single_site_entropy[plot_step, :],
             )
+
             algorithm.write_to_file(
                 F"data/{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}_{step}.npz")
             if args.algorithm == 'exact':

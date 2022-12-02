@@ -1,2 +1,2 @@
-from .MPO import MPO
-from .MPS import MPS
+from .mpo import MPO
+from .mps import MPS
