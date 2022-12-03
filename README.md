@@ -17,35 +17,35 @@ pip install -r requirements.txt
 List all available parameters with
 
 ```bash
-python quantum-game.py --help
+python main.py --help
 ```
 
 Create and show an example heatmap
 
 ```bash
-python quantum-game.py --show
+python main.py --show
 ```
 
 Use different initial state vectors
 
 ```bash
-python quantum-game.py --show --initial-states single triple_blinker
+python main.py --show --initial-states single triple_blinker
 ```
 
 Use different rules
 
 ```bash
-python quantum-game.py --show --distance 2 --activation-interval 2 4
+python main.py --show --distance 2 --activation-interval 2 4
 ```
 
 Write to different file formats
 
 ```bash
-python quantum-game.py --show --file-formats html svg pdf
+python main.py --show --file-formats html svg pdf
 ```
 
 Try the TDVP algorithm (This can take a while)
 
 ```bash
-python quantum-game.py --show --algorithm tdvp --num-steps 100
+python main.py --show --algorithm tdvp --num-steps 1000
 ```

@@ -66,6 +66,3 @@ class Algorithm(ABC):
         into the given arrays
         """
         self._psi.measure(population, d_population, single_site_entropy)
-
-    def write_to_file(self, path: str):
-        self._psi.write_to_file(path)
