@@ -82,7 +82,7 @@ class Parser(object):
         parser.add_argument(
             "--plot-file-path",
             dest="PLOT_FILE_PATH",
-            default="plots/plot",
+            default="plots/",
             help="Write to files at specified relative location, including file prefix"
         )
         parser.add_argument(

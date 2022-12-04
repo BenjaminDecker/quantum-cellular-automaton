@@ -41,6 +41,8 @@ class QuantumGame(object):
             else:
                 state_name = str(index)
 
+            file_name = F"{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}"
+
             logging.info('Preparing algorithm...')
             algorithm_choice: Type[Algorithm] = (
                 Exact if args.algorithm == 'exact' else
@@ -69,23 +71,26 @@ class QuantumGame(object):
                         d_population=d_population[plot_step, :],
                         single_site_entropy=single_site_entropy[plot_step, :],
                     )
+
+                    # Backup all measured data to csv files
                     np.savetxt(
-                        F"data/{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}_population.csv",
+                        F"{args.plot_file_path}{file_name}-population.csv",
                         population[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"data/{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}_d_population.csv",
+                        F"{args.plot_file_path}{file_name}-d_population.csv",
                         d_population[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"data/{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}_single_site_entropy.csv",
+                        F"{args.plot_file_path}{file_name}-single_site_entropy.csv",
                         single_site_entropy[:plot_step, :],
                         delimiter=','
                     )
+
                     algorithm.psi.write_to_file(
-                        F"data/{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}_{step}.npz")
+                        F"data/{file_name}.npz")
                     if args.algorithm == 'exact':
                         algorithm.do_time_step()
                 if args.algorithm != 'exact':
@@ -94,7 +99,7 @@ class QuantumGame(object):
             for format in args.file_formats:
                 path = os.path.join(
                     os.getcwd(),
-                    F"{args.plot_file_path}_{state_name}.{format}"
+                    F"{args.plot_file_path}{file_name}.{format}"
                 )
                 heatmaps = []
                 if args.plot_classical:
