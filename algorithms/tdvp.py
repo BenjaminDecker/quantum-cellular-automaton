@@ -23,6 +23,14 @@ class TDVP(Algorithm):
         for site in reversed(range(1, num_sites)):
             self._calculate_layer_right(site)
 
+    @property
+    def psi(self) -> MPS:
+        return self._psi
+
+    @psi.setter
+    def psi(self, value: MPS) -> None:
+        self._psi = value
+
     def do_time_step(self) -> None:
         self._psi.make_site_canonical(0)
         A = self._psi.A

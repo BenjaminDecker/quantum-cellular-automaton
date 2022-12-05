@@ -10,11 +10,17 @@ class Exact(Algorithm):
     Does not use any tensor network optimizations.
     """
 
+    @property
+    def psi(self) -> MPS:
+        return MPS.from_vector(self._psi)
+
+    @psi.setter
+    def psi(self, value: MPS) -> None:
+        self._psi = value.as_vector()
+
     def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
         super().__init__(psi_0, H, step_size)
         self._U = self.calculate_U(self._H.as_matrix(), self._step_size)
 
     def do_time_step(self) -> None:
-        vec = self._psi.as_vector()
-        vec_new = np.dot(self._U, vec)
-        self._psi = MPS.from_vector(vec_new)
+        self._psi = np.dot(self._U, self._psi)

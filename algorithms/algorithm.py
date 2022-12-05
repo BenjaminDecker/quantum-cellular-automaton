@@ -7,7 +7,6 @@ from tensor_networks import MPS, MPO
 
 
 class Algorithm(ABC):
-    _psi: MPS
     _H: MPO
     _step_size: float
 
@@ -22,12 +21,14 @@ class Algorithm(ABC):
         pass
 
     @property
+    @abstractmethod
     def psi(self) -> MPS:
-        return self._psi
+        pass
 
     @psi.setter
-    def psi(self, value) -> None:
-        self._psi = value
+    @abstractmethod
+    def psi(self, value: MPS) -> None:
+        pass
 
     @classmethod
     def calculate_U(cls, H_matrix: np.ndarray, step_size: float) -> np.ndarray:
@@ -65,4 +66,4 @@ class Algorithm(ABC):
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays
         """
-        self._psi.measure(population, d_population, single_site_entropy)
+        self.psi.measure(population, d_population, single_site_entropy)
