@@ -145,7 +145,7 @@ class Parser(object):
 
     # TODO Pass a parser object around instead of using this global singleton
     @classmethod
-    def instance(cls):
+    def instance(cls) -> 'Parser':
         try:
             return cls._instance
         except AttributeError:

@@ -11,7 +11,7 @@ args = Parser.instance()
 colormap = "inferno"
 
 
-def plot(heatmaps, path):
+def plot(heatmaps, path) -> None:
     _, file_extension = os.path.splitext(path)
     if file_extension == ".html":
         fig = make_subplots(rows=len(heatmaps))

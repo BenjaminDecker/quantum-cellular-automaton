@@ -2,7 +2,7 @@ from parameters import Parser
 from quantum_game import QuantumGame
 
 
-def main():
+def main() -> None:
     args = Parser.instance()
 
     game = QuantumGame(args)

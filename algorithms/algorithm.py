@@ -12,21 +12,21 @@ class Algorithm(ABC):
     _step_size: float
 
     @abstractmethod
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float):
+    def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
         self.psi = psi_0
         self._H = H
         self._step_size = step_size
 
     @abstractmethod
-    def do_time_step(self):
+    def do_time_step(self) -> None:
         pass
 
     @property
-    def psi(self):
+    def psi(self) -> MPS:
         return self._psi
 
     @psi.setter
-    def psi(self, value):
+    def psi(self, value) -> None:
         self._psi = value
 
     @classmethod
@@ -60,7 +60,7 @@ class Algorithm(ABC):
 
         return heatmap
 
-    def measure(self, population, d_population, single_site_entropy):
+    def measure(self, population, d_population, single_site_entropy) -> None:
         """
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays

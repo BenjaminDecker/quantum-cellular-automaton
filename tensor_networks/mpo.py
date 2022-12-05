@@ -23,19 +23,19 @@ class StateData(object):
         )
 
     @classmethod
-    def initial_state_data(cls):
+    def initial_state_data(cls) -> 'StateData':
         return cls(ket_1_ops=0, ket_0_ops=0, s=False)
 
     @property
-    def num_ops(self):
+    def num_ops(self) -> int:
         return self.ket_1_ops + self.ket_0_ops
 
     @property
-    def path_length(self):
+    def path_length(self) -> int:
         return self.num_ops + int(self.s)
 
     @property
-    def is_initial_state_data(self):
+    def is_initial_state_data(self) -> bool:
         return self.path_length == 0
 
 
@@ -71,11 +71,11 @@ class StateAutomaton(object):
         self.states.append(final_state)
 
     @property
-    def max_ops_per_path(self):
+    def max_ops_per_path(self) -> int:
         return self.rules.distance * 2
 
     @property
-    def max_path_length(self):
+    def max_path_length(self) -> int:
         return self.max_ops_per_path + 1
 
     def index_of(self, state_data: StateData) -> int:
@@ -152,11 +152,11 @@ class StateAutomaton(object):
 class MPO(object):
     W: list[np.ndarray] = []
 
-    def __init__(self, Wlist: list[np.ndarray]):
+    def __init__(self, Wlist: list[np.ndarray]) -> None:
         self.W = Wlist
 
     @classmethod
-    def hamiltonian_from_rules(cls, rules: Rules):
+    def hamiltonian_from_rules(cls, rules: Rules) -> 'MPO':
         state_automaton = StateAutomaton(rules=rules)
         num_states = len(state_automaton.states)
 
@@ -200,7 +200,7 @@ class MPO(object):
         return cls(Wlist)
 
     @classmethod
-    def merge_mpo_tensor_pair(cls, W0, W1):
+    def merge_mpo_tensor_pair(cls, W0, W1) -> np.ndarray:
         """
         Merge two neighboring MPO tensors.
         """
@@ -216,8 +216,10 @@ class MPO(object):
         ))
         return W
 
-    def asMatrix(self):
-        """Merge all tensors to obtain the matrix representation on the full Hilbert space."""
+    def as_matrix(self) -> np.ndarray:
+        """
+        Merge all tensors to obtain the matrix representation on the full Hilbert space.
+        """
         H = self.W[0]
         for i in range(1, len(self.W)):
             H = self.merge_mpo_tensor_pair(H, self.W[i])

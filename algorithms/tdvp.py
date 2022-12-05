@@ -6,7 +6,7 @@ from tensor_networks import MPS, MPO
 
 class TDVP(Algorithm):
 
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float):
+    def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
         """
         Prepare the tdvp algorithm by setting variables and calculating all right layers of H_eff for the first iteration
         """
@@ -18,12 +18,12 @@ class TDVP(Algorithm):
         # Sweep back to ensure every tensor is in right canonical form
         self._psi.make_site_canonical(0)
 
-        self._H_eff = [None] * num_sites
+        self._H_eff: list[np.ndarray] = [np.array(0)] * num_sites
 
         for site in reversed(range(1, num_sites)):
             self._calculate_layer_right(site)
 
-    def do_time_step(self):
+    def do_time_step(self) -> None:
         self._psi.make_site_canonical(0)
         A = self._psi.A
         for site in range(len(A)):
@@ -31,7 +31,7 @@ class TDVP(Algorithm):
         for site in reversed(range(len(A))):
             self._sweep_step_left(site)
 
-    def _sweep_step_right(self, site: int):
+    def _sweep_step_right(self, site: int) -> None:
         new_A = self._evolve_site(site)
         if site == len(self._psi.A) - 1:
             self._psi.A[site] = new_A
@@ -51,7 +51,7 @@ class TDVP(Algorithm):
                 (1, 1)
             ), (1, 0, 2))
 
-    def _sweep_step_left(self, site: int):
+    def _sweep_step_left(self, site: int) -> None:
         new_A = self._evolve_site(site)
         if site == 0:
             self._psi.A[site] = new_A
@@ -73,13 +73,13 @@ class TDVP(Algorithm):
                 (2, 0)
             )
 
-    def _get_layer_H_eff(self, site):
+    def _get_layer_H_eff(self, site) -> np.ndarray:
         if site < 0 or site >= len(self._psi.A):
             return np.ones((1, 1, 1))
         else:
             return self._H_eff[site]
 
-    def _calculate_layer_left(self, site: int):
+    def _calculate_layer_left(self, site: int) -> None:
         """
         Calculates the left part of H_eff from the first site to the given site and saves the result to self._H_eff
         """
@@ -102,7 +102,7 @@ class TDVP(Algorithm):
         )
         self._H_eff[site] = new_layer
 
-    def _calculate_layer_right(self, site: int):
+    def _calculate_layer_right(self, site: int) -> None:
         """
         Calculates the right part of H_eff from the given site to the last site and saves the result to self._H_eff
         """
@@ -125,10 +125,7 @@ class TDVP(Algorithm):
         )
         self._H_eff[site] = new_layer
 
-    def _evolve_site(
-            self,
-            site: int
-    ) -> np.ndarray:
+    def _evolve_site(self, site: int) -> np.ndarray:
         """
         Calculates the time evolution over the given time step for site tensor A at the given site
         """

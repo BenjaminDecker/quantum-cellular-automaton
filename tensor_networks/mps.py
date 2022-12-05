@@ -11,14 +11,6 @@ from parameters import Parser
 args = Parser.instance()
 
 
-def crandn(size):
-    """
-    Draw random samples from the standard complex normal (Gaussian) distribution.
-    """
-    # 1/sqrt(2) is a normalization factor
-    return (np.random.normal(size=size) + 1j * np.random.normal(size=size)) / np.sqrt(2)
-
-
 class MPS(object):
     """
     Matrix product state (MPS) class.
@@ -29,18 +21,18 @@ class MPS(object):
 
     A: list[np.ndarray] = []
 
-    def __init__(self, Alist: list[np.ndarray]):
+    def __init__(self, Alist: list[np.ndarray]) -> None:
         self.A = Alist
 
     @classmethod
-    def from_tensors(cls, Alist):
+    def from_tensors(cls, Alist) -> 'MPS':
         """
         Construct an MPS from a list of tensors.
         """
         return cls(Alist=[np.array(A) for A in Alist])
 
     @classmethod
-    def from_density_distribution(cls, plist, bond_dim=args.bond_dim):
+    def from_density_distribution(cls, plist, bond_dim=args.bond_dim) -> 'MPS':
         """
         Constructs an MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
         """
@@ -59,7 +51,7 @@ class MPS(object):
         return cls.from_tensors(Alist=Alist)
 
     @classmethod
-    def from_vector(cls, psi):
+    def from_vector(cls, psi) -> 'MPS':
         """
         Creates an MPS from a full state vector array.
         """
@@ -79,9 +71,16 @@ class MPS(object):
 
         return cls.from_tensors(Alist=Alist)
 
+    @classmethod
+    def from_file(cls, path: str) -> 'MPS':
+        with open(path, 'rb') as f:
+            Adict = np.load(f)
+            Alist = [Adict[F"arr_{i}"] for i in range(len(Adict.files))]
+            return cls(Alist=Alist)
+
     # TODO find better name
     @classmethod
-    def left_qr_tensors(cls, A: np.ndarray):
+    def left_qr_tensors(cls, A: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         s = A.shape
         assert s[2] > 1
         Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])))
@@ -89,7 +88,7 @@ class MPS(object):
         return Q, R
 
     @classmethod
-    def right_qr_tensors(cls, A):
+    def right_qr_tensors(cls, A) -> tuple[np.ndarray, np.ndarray]:
         A_new, R_new = cls.left_qr_tensors(
             np.transpose(A, (0, 2, 1))
         )
@@ -97,14 +96,7 @@ class MPS(object):
         R_new = np.transpose(R_new, (1, 0))
         return A_new, R_new
 
-    @classmethod
-    def from_file(cls, path: str):
-        with open(path, 'rb') as f:
-            Adict = np.load(f)
-            Alist = [Adict[F"arr_{i}"] for i in range(len(Adict.files))]
-            return cls(Alist=Alist)
-
-    def measure(self, population, d_population, single_site_entropy):
+    def measure(self, population, d_population, single_site_entropy) -> None:
         """
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays
@@ -142,11 +134,11 @@ class MPS(object):
                     logm(density_matrix) / np.log(2)
                 ))).real
 
-    def write_to_file(self, path: str):
+    def write_to_file(self, path: str) -> None:
         with open(path, 'wb') as f:
             np.savez(f, *self.A)
 
-    def orthonormalize_left_qr(self, i):
+    def orthonormalize_left_qr(self, i) -> 'MPS':
         """
         Left-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at next site.
         """
@@ -163,7 +155,7 @@ class MPS(object):
         self.A[i + 1] = Aright
         return self
 
-    def orthonormalize_right_qr(self, i):
+    def orthonormalize_right_qr(self, i) -> 'MPS':
         """
         Right-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at previous site.
         """
@@ -177,7 +169,7 @@ class MPS(object):
         self.A[i - 1] = Aleft
         return self
 
-    def make_site_canonical(self, i):
+    def make_site_canonical(self, i) -> 'MPS':
         """
         Brings the mps into site-canonical form with the center at site i
         """
@@ -187,7 +179,7 @@ class MPS(object):
             self.orthonormalize_right_qr(j)
         return self
 
-    def as_vector(self):
+    def as_vector(self) -> np.ndarray:
         """
         Merge all tensors to obtain the vector representation on the full Hilbert space.
         """
@@ -204,7 +196,7 @@ class MPS(object):
         psi = np.trace(psi, axis1=1, axis2=2)
         return psi
 
-    def print_shapes(self):
+    def print_shapes(self) -> None:
         for A in self.A:
             print(A.shape)
         print("")

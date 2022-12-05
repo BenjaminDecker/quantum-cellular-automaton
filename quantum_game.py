@@ -14,7 +14,7 @@ from tensor_networks import MPO, MPS
 
 class QuantumGame(object):
 
-    def __init__(self, args: Parser):
+    def __init__(self, args: Parser) -> None:
         self.args = args
         self.H = MPO.hamiltonian_from_rules(args.rules)
         self.initial_states = (
@@ -23,7 +23,7 @@ class QuantumGame(object):
         )
         logging.basicConfig(level=logging.INFO)
 
-    def start(self):
+    def start(self) -> None:
         args = self.args
         for index, initial_state in enumerate(self.initial_states):
             population = np.empty(
