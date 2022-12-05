@@ -8,7 +8,8 @@ class TDVP(Algorithm):
 
     def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
         """
-        Prepare the tdvp algorithm by setting variables and calculating all right layers of H_eff for the first iteration
+        Prepare the tdvp algorithm by setting variables and calculating all right layers of H_eff for the first
+        iteration
         """
         super().__init__(psi_0, H, step_size)
 
@@ -133,7 +134,7 @@ class TDVP(Algorithm):
 
     def _evolve_site(self, site: int) -> np.ndarray:
         """
-        Calculates the time evolution over the given time step for site tensor A at the given site
+        Calculates the time evolution of the site tensor at the given site
         """
         H_eff = np.tensordot(
             self._H.W[site],
@@ -159,7 +160,7 @@ class TDVP(Algorithm):
 
     def _evolve_bond(self, C: np.ndarray, H_eff_left: np.ndarray, H_eff_right: np.ndarray) -> np.ndarray:
         """
-        Calculates the time evolution over the given time step for bond tensor C between the given site and the previous
+        Calculates the time evolution of the given bond tensor based on the given halves of the effective hamiltonian
         """
         H_eff = np.tensordot(
             H_eff_left,

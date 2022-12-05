@@ -41,7 +41,8 @@ class QuantumGame(object):
             else:
                 state_name = str(index)
 
-            file_name = F"{state_name}_{args.rules.ncells}_{args.rules.distance}_{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}"
+            file_name = F"{state_name}_{args.rules.ncells}_{args.rules.distance}_" \
+                        F"{args.rules.activation_interval.start}_{args.rules.activation_interval.stop}_{args.algorithm}"
 
             logging.info('Preparing algorithm...')
             algorithm_choice: Type[Algorithm] = (

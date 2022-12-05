@@ -34,7 +34,8 @@ class MPS(object):
     @classmethod
     def from_density_distribution(cls, plist, bond_dim=args.bond_dim) -> 'MPS':
         """
-        Constructs an MPS with the given bond-dimension from a list of density values describing the probability of each site to be in state ket-1.
+        Constructs an MPS with the given bond-dimension from a list of density values describing the probability of
+        each site to be in state ket-1.
         """
         left = np.zeros((2, 1, bond_dim))
         left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5])
