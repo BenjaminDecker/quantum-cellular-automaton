@@ -32,13 +32,7 @@ class TDVP(Algorithm):
             self._sweep_step_left(site)
 
     def _sweep_step_right(self, site: int):
-        new_A = self._evolve_site(
-            self._psi.A[site],
-            self._get_layer_H_eff(site - 1),
-            self._get_layer_H_eff(site + 1),
-            self._H.W[site],
-            self._step_size / 2
-        )
+        new_A = self._evolve_site(site)
         if site == len(self._psi.A) - 1:
             self._psi.A[site] = new_A
         else:
@@ -58,15 +52,7 @@ class TDVP(Algorithm):
             ), (1, 0, 2))
 
     def _sweep_step_left(self, site: int):
-
-        new_A = self._evolve_site(
-            self._psi.A[site],
-            self._get_layer_H_eff(site - 1),
-            self._get_layer_H_eff(site + 1),
-            self._H.W[site],
-            self._step_size / 2
-        )
-
+        new_A = self._evolve_site(site)
         if site == 0:
             self._psi.A[site] = new_A
         else:
@@ -139,26 +125,21 @@ class TDVP(Algorithm):
         )
         self._H_eff[site] = new_layer
 
-    @classmethod
     def _evolve_site(
-            cls,
-            A: np.ndarray,
-            H_eff_left: np.ndarray,
-            H_eff_right: np.ndarray,
-            W: np.ndarray,
-            step_size: float
+            self,
+            site: int
     ) -> np.ndarray:
         """
         Calculates the time evolution over the given time step for site tensor A at the given site
         """
         H_eff = np.tensordot(
-            W,
-            H_eff_left,
+            self._H.W[site],
+            self._get_layer_H_eff(site - 1),
             (2, 1)
         )
         H_eff = np.tensordot(
             H_eff,
-            H_eff_right,
+            self._get_layer_H_eff(site + 1),
             (2, 1)
         )
         H_eff = np.transpose(H_eff, (0, 2, 4, 1, 3, 5))
@@ -166,7 +147,8 @@ class TDVP(Algorithm):
             H_eff.shape[0] * H_eff.shape[1] * H_eff.shape[2],
             H_eff.shape[3] * H_eff.shape[4] * H_eff.shape[5]
         ))
-        U_eff = cls.calculate_U(H_eff, step_size)
+        U_eff = self.calculate_U(H_eff, self._step_size / 2)
+        A = self.psi.A[site]
         shape = A.shape
         new_A = np.reshape(A, -1)
         new_A = np.tensordot(new_A, U_eff, (0, 0))
