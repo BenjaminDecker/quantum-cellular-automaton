@@ -42,8 +42,7 @@ class TDVP(Algorithm):
             new_C = self._evolve_bond(
                 C,
                 self._get_layer_H_eff(site),
-                self._get_layer_H_eff(site + 1),
-                -self._step_size / 2
+                self._get_layer_H_eff(site + 1)
             )
             self._psi.A[site + 1] = np.transpose(np.tensordot(
                 new_C,
@@ -64,8 +63,7 @@ class TDVP(Algorithm):
             new_C = self._evolve_bond(
                 C,
                 self._get_layer_H_eff(site - 1),
-                self._get_layer_H_eff(site),
-                -self._step_size / 2
+                self._get_layer_H_eff(site)
             )
             self._psi.A[site - 1] = np.tensordot(
                 self._psi.A[site - 1],
@@ -151,16 +149,9 @@ class TDVP(Algorithm):
         new_A = np.tensordot(new_A, U_eff, (0, 0))
         return np.reshape(new_A, shape)
 
-    @classmethod
-    def _evolve_bond(
-            cls,
-            C: np.ndarray,
-            H_eff_left: np.ndarray,
-            H_eff_right: np.ndarray,
-            step_size: float
-    ) -> np.ndarray:
+    def _evolve_bond(self, C: np.ndarray, H_eff_left: np.ndarray, H_eff_right: np.ndarray) -> np.ndarray:
         """
-        Calculates the time evolution over the given time step for bond tensor C between the given site and the next
+        Calculates the time evolution over the given time step for bond tensor C between the given site and the previous
         """
         H_eff = np.tensordot(
             H_eff_left,
@@ -172,7 +163,7 @@ class TDVP(Algorithm):
             H_eff.shape[0] * H_eff.shape[1],
             H_eff.shape[2] * H_eff.shape[3]
         ))
-        U_eff = cls.calculate_U(H_eff, step_size)
+        U_eff = self.calculate_U(H_eff, -self._step_size / 2)
         shape = C.shape
         new_C = np.reshape(C, -1)
         new_C = np.tensordot(new_C, U_eff, (0, 0))
