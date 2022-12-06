@@ -97,8 +97,7 @@ class Parser(object):
         parser.add_argument(
             "--initial-states",
             dest="INITIAL_STATES",
-            nargs="+",
-            default=["blinker"],
+            nargs="*",
             choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_0", "all_ket_1",
                      "all_ket_1_but_outer", "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
             help="List of initial states"
@@ -135,6 +134,8 @@ class Parser(object):
         self.plot_file_path = args.PLOT_FILE_PATH
         self.file_formats = args.FORMATS
         self.initial_states = args.INITIAL_STATES
+        if self.initial_states is None:
+            self.initial_states = []
         self.initial_state_files = args.INITIAL_STATE_FILES
         if self.initial_state_files is None:
             self.initial_state_files = []
