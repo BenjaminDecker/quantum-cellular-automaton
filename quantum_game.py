@@ -15,25 +15,30 @@ from tensor_networks import MPO, MPS
 class QuantumGame(object):
 
     def __init__(self, args: Parser) -> None:
+        logging.basicConfig(level=logging.INFO)
+        logging.info('Preparing hamiltonian and states...')
         self.args = args
         self.H = MPO.hamiltonian_from_rules(args.rules)
         self.initial_states = (
                 [getattr(states, name)() for name in args.initial_states] +
                 [MPS.from_file(file) for file in args.initial_state_files]
         )
-        logging.basicConfig(level=logging.INFO)
+        self.plot_step_interval = int(1 / (args.plot_frequency * args.step_size))
+        self.plot_steps = args.num_steps // self.plot_step_interval
+        if args.num_steps % self.plot_step_interval > 0:
+            self.plot_steps += 1
 
     def start(self) -> None:
         args = self.args
         for index, initial_state in enumerate(self.initial_states):
             population = np.empty(
-                [args.plot_steps, args.rules.ncells]
+                [self.plot_steps, args.rules.ncells]
             )
             d_population = np.empty(
-                [args.plot_steps, args.rules.ncells]
+                [self.plot_steps, args.rules.ncells]
             )
             single_site_entropy = np.empty(
-                [args.plot_steps, args.rules.ncells]
+                [self.plot_steps, args.rules.ncells]
             )
             state_name: str
             if index < len(args.initial_states):
@@ -55,7 +60,7 @@ class QuantumGame(object):
             )
 
             step_size = (
-                args.step_size * args.plot_step_interval if args.algorithm == 'exact' else
+                args.step_size * self.plot_step_interval if args.algorithm == 'exact' else
                 args.step_size
             )
 
@@ -65,11 +70,12 @@ class QuantumGame(object):
                 step_size=step_size
             )
 
+            logging.info('Running simulation...')
             for step in range(args.num_steps):
                 if step % 100 == 0:
                     logging.info(F"Step {step} of {args.num_steps}")
-                if step % args.plot_step_interval == 0:
-                    plot_step = step // args.plot_step_interval
+                if step % self.plot_step_interval == 0:
+                    plot_step = step // self.plot_step_interval
                     algorithm.measure(
                         population=population[plot_step, :],
                         d_population=d_population[plot_step, :],

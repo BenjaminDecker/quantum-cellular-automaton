@@ -1,6 +1,6 @@
 # quantum-cellular-automaton
 
-## A classical simulation of the quantum game of life
+## A Classical Simulation of the Quantum Game of Life
 
 ![](plots/plot.svg)
 
