@@ -40,12 +40,12 @@ class Parser(object):
             default=10000,
             help="Number of time steps to simulate"
         )
-        parser.add_argument(
-            "--periodic",
-            dest="PERIODIC",
-            action="store_true",
-            help="Use periodic instead of constant boundary conditions (experimental)"
-        )
+        # parser.add_argument(
+        #     "--periodic",
+        #     dest="PERIODIC",
+        #     action="store_true",
+        #     help="Use periodic instead of constant boundary conditions (experimental)"
+        # )
         parser.add_argument(
             "--algorithm",
             dest="ALGORITHM",
@@ -123,7 +123,7 @@ class Parser(object):
             ncells=args.NUM_CELLS,
             activation_interval=range(args.INTERVAL[0], args.INTERVAL[1]),
             distance=args.DISTANCE,
-            periodic=args.PERIODIC
+            periodic=False
         )
         self.num_steps = args.NUM_STEPS
         self.step_size = args.STEP_SIZE
