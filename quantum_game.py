@@ -4,6 +4,7 @@ import webbrowser
 from typing import Type
 
 import numpy as np
+from tqdm import tqdm
 
 import plot
 import states
@@ -71,9 +72,7 @@ class QuantumGame(object):
             )
 
             logging.info('Running simulation...')
-            for step in range(args.num_steps):
-                if step % 100 == 0:
-                    logging.info(F"Step {step} of {args.num_steps}")
+            for step in tqdm(range(args.num_steps)):
                 if step % self.plot_step_interval == 0:
                     plot_step = step // self.plot_step_interval
                     algorithm.measure(
