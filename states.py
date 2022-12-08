@@ -29,7 +29,7 @@ def single(position=int(args.rules.ncells / 2)) -> MPS:
 
 
 def single_bottom() -> MPS:
-    return single(args.rules.distance)
+    return single(0)
 
 
 def all_ket_0() -> MPS:

@@ -145,6 +145,10 @@ class Parser(object):
         if self.initial_state_files is None:
             self.initial_state_files = []
         self.bond_dim = args.BOND_DIM
+        self.plot_step_interval = int(1 / (self.plot_frequency * self.step_size))
+        self.plot_steps = self.num_steps // self.plot_step_interval
+        if self.num_steps % self.plot_step_interval > 0:
+            self.plot_steps += 1
 
     # TODO Pass a parser object around instead of using this global singleton
     @classmethod

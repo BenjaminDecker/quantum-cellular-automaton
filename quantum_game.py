@@ -24,22 +24,18 @@ class QuantumGame(object):
                 [getattr(states, name)() for name in args.initial_states] +
                 [MPS.from_file(file) for file in args.initial_state_files]
         )
-        self.plot_step_interval = int(1 / (args.plot_frequency * args.step_size))
-        self.plot_steps = args.num_steps // self.plot_step_interval
-        if args.num_steps % self.plot_step_interval > 0:
-            self.plot_steps += 1
 
     def start(self) -> None:
         args = self.args
         for index, initial_state in enumerate(self.initial_states):
             population = np.empty(
-                [self.plot_steps, args.rules.ncells]
+                [args.plot_steps, args.rules.ncells]
             )
             d_population = np.empty(
-                [self.plot_steps, args.rules.ncells]
+                [args.plot_steps, args.rules.ncells]
             )
             single_site_entropy = np.empty(
-                [self.plot_steps, args.rules.ncells]
+                [args.plot_steps, args.rules.ncells]
             )
             state_name: str
             if index < len(args.initial_states):
@@ -61,7 +57,7 @@ class QuantumGame(object):
             )
 
             step_size = (
-                args.step_size * self.plot_step_interval if args.algorithm == 'exact' else
+                args.step_size * args.plot_step_interval if args.algorithm == 'exact' else
                 args.step_size
             )
 
@@ -73,8 +69,8 @@ class QuantumGame(object):
 
             logging.info('Running simulation...')
             for step in tqdm(range(args.num_steps)):
-                if step % self.plot_step_interval == 0:
-                    plot_step = step // self.plot_step_interval
+                if step % args.plot_step_interval == 0:
+                    plot_step = step // args.plot_step_interval
                     algorithm.measure(
                         population=population[plot_step, :],
                         d_population=d_population[plot_step, :],
