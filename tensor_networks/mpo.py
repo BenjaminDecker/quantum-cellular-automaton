@@ -160,7 +160,7 @@ class MPO(object):
         state_automaton = StateAutomaton(rules=rules)
         num_states = len(state_automaton.states)
 
-        tensor = np.zeros((2, 2, num_states, num_states), dtype=np.complex)
+        tensor = np.zeros((2, 2, num_states, num_states), dtype=complex)
         for (index, state) in enumerate(state_automaton.states):
             for edge in state.edges:
                 tensor[:, :, edge.index, index] += edge.operator
