@@ -40,7 +40,7 @@ class Algorithm(ABC):
     @classmethod
     def classical_evolution(cls, first_column: np.ndarray, rules: Rules, plot_steps: int) -> np.ndarray:
         """
-        Non-Quantum time evolution according to classical wolfram rules
+        Non-Quantum time evolution governed by classical wolfram rules
         """
         heatmap = np.zeros([plot_steps, len(first_column)])
         heatmap[0, :] = first_column

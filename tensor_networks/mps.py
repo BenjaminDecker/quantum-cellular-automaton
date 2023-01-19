@@ -31,8 +31,9 @@ class MPS(object):
         """
         return cls(Alist=[np.array(A) for A in Alist])
 
+    # TODO fix bond dim
     @classmethod
-    def from_density_distribution(cls, plist, bond_dim=args.bond_dim) -> 'MPS':
+    def from_density_distribution(cls, plist, bond_dim=5) -> 'MPS':
         """
         Constructs an MPS with the given bond-dimension from a list of density values describing the probability of
         each site to be in state ket-1.
@@ -81,21 +82,22 @@ class MPS(object):
 
     # TODO find better name
     @classmethod
-    def left_qr_tensors(cls, A: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def left_qr_tensors(cls, A: np.ndarray, reduced=True) -> tuple[np.ndarray, np.ndarray]:
         s = A.shape
         assert s[2] > 1
-        Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])))
+        Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])), mode='reduced' if reduced else 'complete')
         Q = np.reshape(Q, (s[0], s[1], -1))
         return Q, R
 
     @classmethod
-    def right_qr_tensors(cls, A) -> tuple[np.ndarray, np.ndarray]:
-        A_new, R_new = cls.left_qr_tensors(
-            np.transpose(A, (0, 2, 1))
+    def right_qr_tensors(cls, A: np.ndarray, reduced=True) -> tuple[np.ndarray, np.ndarray]:
+        Q, R = cls.left_qr_tensors(
+            np.transpose(A, (0, 2, 1)),
+            reduced
         )
-        A_new = np.transpose(A_new, (0, 2, 1))
-        R_new = np.transpose(R_new, (1, 0))
-        return A_new, R_new
+        Q = np.transpose(Q, (0, 2, 1))
+        R = np.transpose(R, (1, 0))
+        return Q, R
 
     def measure(self, population, d_population, single_site_entropy) -> None:
         """
@@ -198,6 +200,7 @@ class MPS(object):
         return psi
 
     def print_shapes(self) -> None:
+        shapes_str = ""
         for A in self.A:
-            print(A.shape)
-        print("")
+            shapes_str += F"{A.shape} "
+        print(shapes_str)
