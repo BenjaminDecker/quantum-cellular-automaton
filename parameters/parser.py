@@ -63,13 +63,6 @@ class Parser(object):
             help="List of .npz files containing mps initial states as created by np.savez(file, *Alist), where Alist is"
                  "a list of MPS tensors. The number of sites of the mps must be the same as specified with --num-cells."
         )
-        init_group.add_argument(
-            "--bond-dim",
-            dest="BOND_DIM",
-            type=int,
-            default=5,
-            help="The bond dimension to use for the initial states. Only relevant for the tdvp algorithm."
-        )
         algo_group = parser.add_argument_group('Algorithm')
         algo_group.add_argument(
             "--algorithm",
@@ -84,6 +77,14 @@ class Parser(object):
             type=float,
             default=.01,
             help="Size of one time step. The time step size is calculated as (STEP_SIZE * pi/2)"
+        )
+        algo_group.add_argument(
+            "--max-bond-dim",
+            dest="MAX_BOND_DIM",
+            type=int,
+            default=32,
+            help="The maximum that a bond of the MPS is allowed to grow to during simulation."
+                 "Only relevant for the tdvp algorithm."
         )
         plot_group = parser.add_argument_group('Plot')
         plot_group.add_argument(
@@ -144,7 +145,7 @@ class Parser(object):
         self.initial_state_files = args.INITIAL_STATE_FILES
         if self.initial_state_files is None:
             self.initial_state_files = []
-        self.bond_dim = args.BOND_DIM
+        self.max_bond_dim = args.MAX_BOND_DIM
         self.plot_step_interval = int(1 / (self.plot_frequency * self.step_size))
         self.plot_steps = self.num_steps // self.plot_step_interval
         if self.num_steps % self.plot_step_interval > 0:

@@ -10,8 +10,8 @@ class Exact(Algorithm):
     Does not use any tensor network optimizations.
     """
 
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
-        super().__init__(psi_0, H, step_size)
+    def __init__(self, psi_0: MPS, H: MPO, step_size: float, max_bond_dim: int) -> None:
+        super().__init__(psi_0, H, step_size, max_bond_dim)
         self._U = self.calculate_U(self._H.as_matrix(), self._step_size)
 
     @property

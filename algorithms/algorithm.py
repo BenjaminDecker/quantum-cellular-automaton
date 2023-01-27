@@ -8,13 +8,14 @@ from tensor_networks import MPS, MPO
 
 class Algorithm(ABC):
     _H: MPO
-    _step_size: float
+    _step_size: complex
 
     @abstractmethod
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
+    def __init__(self, psi_0: MPS, H: MPO, step_size: complex, max_bond_dim: int) -> None:
         self.psi = psi_0
         self._H = H
         self._step_size = step_size
+        self._max_bond_dim = max_bond_dim
 
     @abstractmethod
     def do_time_step(self) -> None:
@@ -31,7 +32,7 @@ class Algorithm(ABC):
         pass
 
     @classmethod
-    def calculate_U(cls, H_matrix: np.ndarray, step_size: float) -> np.ndarray:
+    def calculate_U(cls, H_matrix: np.ndarray, step_size: complex) -> np.ndarray:
         w, v = np.linalg.eigh(H_matrix)
         t = -1j * (np.pi / 2) * step_size
         w = np.exp(t * w)

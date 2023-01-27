@@ -46,7 +46,7 @@ class QuantumGame(object):
             file_name = F"{state_name}{args.rules.ncells}_" \
                         F"r{args.rules.distance}{args.rules.activation_interval.start}{args.rules.activation_interval.stop}_" \
                         F"t{str(args.step_size).replace('.', '')}_" \
-                        F"b{args.bond_dim}_" \
+                        F"b{args.max_bond_dim}_" \
                         F"{args.algorithm}"
 
             logging.info('Preparing algorithm...')
@@ -64,7 +64,8 @@ class QuantumGame(object):
             algorithm = algorithm_choice(
                 psi_0=initial_state,
                 H=self.H,
-                step_size=step_size
+                step_size=step_size,
+                max_bond_dim=args.max_bond_dim
             )
 
             logging.info('Running simulation...')

@@ -31,22 +31,21 @@ class MPS(object):
         """
         return cls(Alist=[np.array(A) for A in Alist])
 
-    # TODO fix bond dim
     @classmethod
-    def from_density_distribution(cls, plist, bond_dim=5) -> 'MPS':
+    def from_density_distribution(cls, plist) -> 'MPS':
         """
-        Constructs an MPS with the given bond-dimension from a list of density values describing the probability of
-        each site to be in state ket-1.
+        Constructs an MPS with bond-dimension 1 from a list of density values describing the probability of each site to
+        be in state ket-1.
         """
-        left = np.zeros((2, 1, bond_dim))
+        left = np.zeros((2, 1, 1))
         left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5])
-        right = np.zeros((2, bond_dim, 1))
+        right = np.zeros((2, 1, 1))
         right[:, 0, 0] = np.array([(1. - plist[-1]) ** .5, plist[-1] ** .5])
         if len(plist) == 1:
             return cls.from_tensors(Alist=[left[:, :, :]])
         Alist = [left]
         for i in range(1, len(plist) - 1):
-            tensor = np.zeros((2, bond_dim, bond_dim))
+            tensor = np.zeros((2, 1, 1))
             tensor[:, 0, 0] = np.array([(1. - plist[i]) ** .5, (plist[i]) ** .5])
             Alist.append(tensor)
         Alist.append(right)
@@ -84,7 +83,6 @@ class MPS(object):
     @classmethod
     def left_qr_tensors(cls, A: np.ndarray, reduced=True) -> tuple[np.ndarray, np.ndarray]:
         s = A.shape
-        assert s[2] > 1
         Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])), mode='reduced' if reduced else 'complete')
         Q = np.reshape(Q, (s[0], s[1], -1))
         return Q, R
@@ -143,12 +141,15 @@ class MPS(object):
 
     def orthonormalize_left_qr(self, i) -> 'MPS':
         """
-        Left-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at next site.
+        Left-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor one site to the right
         """
         assert i < len(self.A) - 1
         A = self.A[i]
+        shape = A.shape
         # perform QR decomposition and replace A by reshaped Q matrix
         A_new, R = MPS.left_qr_tensors(A)
+        A_new = MPS.truncate_and_pad_into_shape(A_new, shape)
+        R = MPS.truncate_and_pad_into_shape(R, (shape[2], self.A[i + 1].shape[1]))
         # update Anext tensor: multiply with R from left
         Aright = np.transpose(
             np.tensordot(R, self.A[i + 1], (1, 1)),
@@ -160,12 +161,15 @@ class MPS(object):
 
     def orthonormalize_right_qr(self, i) -> 'MPS':
         """
-        Right-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at previous site.
+        Right-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor one site to the left
         """
         assert i > 0
         A = self.A[i]
+        shape = A.shape
         # perform QR decomposition and replace A by reshaped Q matrix
         A_new, R = MPS.right_qr_tensors(A)
+        A_new = MPS.truncate_and_pad_into_shape(A_new, shape)
+        R = MPS.truncate_and_pad_into_shape(R, (self.A[i - 1].shape[2], shape[1]))
         # update left tensor: multiply with R from right
         Aleft = np.tensordot(self.A[i - 1], R, (2, 0))
         self.A[i] = A_new
@@ -195,7 +199,6 @@ class MPS(object):
                 psi.shape[2],
                 psi.shape[3]
             ))
-        # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
         psi = np.trace(psi, axis1=1, axis2=2)
         return psi
 
@@ -204,3 +207,22 @@ class MPS(object):
         for A in self.A:
             shapes_str += F"{A.shape} "
         print(shapes_str)
+
+    def is_valid_mps(self) -> bool:
+        if self.A[0].shape[1] != 1 or self.A[-1].shape[2] != 1:
+            return False
+        if self.A[0].shape[2] != self.A[1].shape[1] or self.A[-1].shape[1] != self.A[-2].shape[2]:
+            return False
+        for i in range(1, len(self.A) - 1):
+            if self.A[i].shape[1] != self.A[i - 1].shape[2] or self.A[i].shape[2] != self.A[i + 1].shape[1]:
+                return False
+        return True
+
+    @classmethod
+    def truncate_and_pad_into_shape(cls, tensor: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
+        assert len(tensor.shape) == len(target_shape)
+        new_tensor = np.zeros(target_shape, dtype=tensor.dtype)
+        indices = tuple(slice(0, min(target_shape[i], tensor.shape[i])) for i in range(len(target_shape)))
+        new_tensor[indices] = tensor[indices]
+        assert new_tensor.shape == target_shape
+        return new_tensor
