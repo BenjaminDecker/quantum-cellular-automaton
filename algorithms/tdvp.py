@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 from algorithms import Algorithm
@@ -25,13 +23,14 @@ class TDVP(Algorithm):
         self._H_eff_right: list[np.ndarray] = [np.array(0)] * num_sites
 
         self._target_bond_dims: list[int] = [
-            min(2 ** i, 2 ** (len(self._psi.A) - i), 5) for i in range(len(self._psi.A) + 1)
+            min(2 ** i, 2 ** (len(self._psi.A) - i), self._max_bond_dim) for i in range(len(self._psi.A) + 1)
         ]
+
+        self._max_bond_dims: list[int] = self._target_bond_dims.copy()
 
         for site in reversed(range(1, num_sites)):
             self._psi.make_site_canonical(site - 1)
             self._calculate_new_right_H_eff(site, self._psi.A[site])
-        self.start_counter = 100
 
     @property
     def psi(self) -> MPS:
@@ -98,7 +97,7 @@ class TDVP(Algorithm):
         K_eff = np.transpose(K_eff, (0, 2, 1, 3))
         return K_eff
 
-    def _calculate_new_target_bond_dimensions(self, accuracy: float = 0.000001):
+    def _calculate_new_target_bond_dimensions(self, accuracy: float = 0.0001):
         self._psi.make_site_canonical(0)
         for site in range(len(self._psi.A) - 1):
             self._psi.make_site_canonical(site)
@@ -107,7 +106,7 @@ class TDVP(Algorithm):
 
         for bond in reversed(range(1, len(self._psi.A))):
             A_right = self._psi.A[bond].copy()
-            _, C = MPS.right_qr_tensors(A_right, reduced=False)
+            _, C = MPS.right_qr_tensors(A_right)
             self._psi.make_site_canonical(bond - 1)
             A_left = self._psi.A[bond - 1].copy()
             C = MPS.truncate_and_pad_into_shape(C, (A_left.shape[2], A_right.shape[1]))
@@ -122,12 +121,12 @@ class TDVP(Algorithm):
             H_eff_left_middle = self._get_layer_H_eff(
                 site=bond - 1,
                 side="left",
-                shape=(A_right.shape[1], self._max_bond_dim)
+                shape=(A_right.shape[1], self._max_bond_dims[bond])
             )
             H_eff_right_middle = self._get_layer_H_eff(
                 site=bond,
                 side="right",
-                shape=(A_left.shape[2], self._max_bond_dim)
+                shape=(A_left.shape[2], self._max_bond_dims[bond])
             )
             H_eff_right_right = self._get_layer_H_eff(
                 site=bond + 1,
@@ -150,8 +149,8 @@ class TDVP(Algorithm):
             if previous_convergence_measure == 0.0:
                 self._target_bond_dims[bond] = 1
                 continue
-            self._target_bond_dims[bond] = self._max_bond_dim
-            for bond_dim in range(2, self._max_bond_dim):
+            self._target_bond_dims[bond] = self._max_bond_dims[bond]
+            for bond_dim in range(2, self._max_bond_dims[bond]):
                 new_convergence_measure = self._calculate_convergence_measure(
                     A_left,
                     A_right,
@@ -167,14 +166,14 @@ class TDVP(Algorithm):
                 previous_convergence_measure = new_convergence_measure
 
     def _sweep_step_right(self, site: int) -> None:
-        target_shape = (2, self._target_bond_dims[site], self._target_bond_dims[site + 1])
+        target_shape = (2, self._target_bond_dims[site], self._psi.A[site].shape[2])
         new_A = self._evolve_site(site, target_shape)
         assert new_A.shape == target_shape
 
         if site == len(self._psi.A) - 1:
             self._psi.A[site] = new_A
         else:
-            left_orthonormal_A, C = MPS.left_qr_tensors(new_A, reduced=False)
+            left_orthonormal_A, C = MPS.left_qr_tensors(new_A)
             self._psi.A[site] = MPS.truncate_and_pad_into_shape(left_orthonormal_A, target_shape)
             assert self._psi.A[site].shape == target_shape
             self._calculate_new_left_H_eff(site, left_orthonormal_A)
@@ -187,14 +186,14 @@ class TDVP(Algorithm):
             ), (1, 0, 2))
 
     def _sweep_step_left(self, site: int) -> None:
-        target_shape = (2, self._target_bond_dims[site], self._target_bond_dims[site + 1])
+        target_shape = (2, self._psi.A[site].shape[1], self._target_bond_dims[site + 1])
         new_A = self._evolve_site(site, target_shape)
         assert new_A.shape == target_shape
 
         if site == 0:
             self._psi.A[site] = new_A
         else:
-            right_orthonormal_A, C = MPS.right_qr_tensors(new_A, reduced=False)
+            right_orthonormal_A, C = MPS.right_qr_tensors(new_A)
             self._psi.A[site] = MPS.truncate_and_pad_into_shape(right_orthonormal_A, target_shape)
             assert self._psi.A[site].shape == target_shape
             self._calculate_new_right_H_eff(site, right_orthonormal_A)
@@ -305,10 +304,10 @@ class TDVP(Algorithm):
             shape=(calculation_shape[0], calculation_shape[0])
         )
         H_eff_right = self._get_layer_H_eff(
-                site=bond,
-                side="right",
-                shape=(calculation_shape[1], calculation_shape[1])
-            )
+            site=bond,
+            side="right",
+            shape=(calculation_shape[1], calculation_shape[1])
+        )
         H_eff = self._assemble_K_eff(H_eff_left, H_eff_right)
         assert H_eff.shape[0] == H_eff.shape[2]
         assert H_eff.shape[1] == H_eff.shape[3]
