@@ -37,6 +37,9 @@ class QuantumGame(object):
             single_site_entropy = np.empty(
                 [args.plot_steps, args.rules.ncells]
             )
+            bond_dims = np.empty(
+                [args.plot_steps, args.rules.ncells + 1]
+            )
             state_name: str
             if index < len(args.initial_states):
                 state_name = args.initial_states[index]
@@ -76,6 +79,7 @@ class QuantumGame(object):
                         population=population[plot_step, :],
                         d_population=d_population[plot_step, :],
                         single_site_entropy=single_site_entropy[plot_step, :],
+                        bond_dims=bond_dims[plot_step, :]
                     )
 
                     # Backup all measured data to csv files
@@ -92,6 +96,11 @@ class QuantumGame(object):
                     np.savetxt(
                         F"{args.plot_file_path}{file_name}-single_site_entropy.csv",
                         single_site_entropy[:plot_step, :],
+                        delimiter=','
+                    )
+                    np.savetxt(
+                        F"{args.plot_file_path}{file_name}-bond_dims.csv",
+                        bond_dims[:plot_step, :],
                         delimiter=','
                     )
 
@@ -118,7 +127,8 @@ class QuantumGame(object):
                 heatmaps += [
                     population,
                     d_population,
-                    single_site_entropy
+                    single_site_entropy,
+                    bond_dims / args.max_bond_dim
                 ]
                 # Save the plots to files
                 plot.plot(heatmaps=heatmaps, path=path)

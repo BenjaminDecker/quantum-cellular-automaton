@@ -97,12 +97,16 @@ class MPS(object):
         R = np.transpose(R, (1, 0))
         return Q, R
 
-    def measure(self, population, d_population, single_site_entropy) -> None:
+    def measure(self, population, d_population, single_site_entropy, bond_dims) -> None:
         """
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays
         """
         # Start with the orthogonality center at site 0
+        assert (len(self.A) + 1) == len(bond_dims)
+        for i in range(len(self.A)):
+            bond_dims[i] = self.A[i].shape[1]
+        bond_dims[-1] = self.A[-1].shape[2]
         self.make_site_canonical(0)
         first = True
         for site in range(len(self.A)):

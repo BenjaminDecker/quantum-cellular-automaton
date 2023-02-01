@@ -62,9 +62,9 @@ class Algorithm(ABC):
 
         return heatmap
 
-    def measure(self, population, d_population, single_site_entropy) -> None:
+    def measure(self, population, d_population, single_site_entropy, bond_dims) -> None:
         """
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays
         """
-        self.psi.measure(population, d_population, single_site_entropy)
+        self.psi.measure(population, d_population, single_site_entropy, bond_dims)
