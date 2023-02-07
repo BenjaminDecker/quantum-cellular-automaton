@@ -75,7 +75,7 @@ class Parser(object):
             "--step-size",
             dest="STEP_SIZE",
             type=float,
-            default=.005,
+            default=.01,
             help="Size of one time step. The time step size is calculated as (STEP_SIZE * pi/2)"
         )
         algo_group.add_argument(

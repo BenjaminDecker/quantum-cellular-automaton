@@ -180,6 +180,7 @@ class MPS(object):
         self.A[i - 1] = Aleft
         return self
 
+    # TODO use a site hint
     def make_site_canonical(self, i) -> 'MPS':
         """
         Brings the mps into site-canonical form with the center at site i
@@ -225,8 +226,11 @@ class MPS(object):
     @classmethod
     def truncate_and_pad_into_shape(cls, tensor: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
         assert len(tensor.shape) == len(target_shape)
-        new_tensor = np.zeros(target_shape, dtype=tensor.dtype)
         indices = tuple(slice(0, min(target_shape[i], tensor.shape[i])) for i in range(len(target_shape)))
+        # If tensor does not need to be padded, return a slice on it
+        if all(tensor_shape >= target_shape for tensor_shape, target_shape in zip(tensor.shape, target_shape)):
+            return tensor[indices]
+        new_tensor = np.zeros(target_shape, dtype=tensor.dtype)
         new_tensor[indices] = tensor[indices]
         assert new_tensor.shape == target_shape
         return new_tensor
