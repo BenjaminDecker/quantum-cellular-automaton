@@ -1,6 +1,7 @@
 import numpy as np
 
 from algorithms import Algorithm
+from lautils import calculate_U
 from tensor_networks import MPS, MPO
 
 
@@ -204,7 +205,7 @@ class TDVP(Algorithm):
             H_eff.shape[0] * H_eff.shape[1] * H_eff.shape[2],
             H_eff.shape[3] * H_eff.shape[4] * H_eff.shape[5]
         ))
-        U_eff = self.calculate_U(H_eff, self._step_size / 2)
+        U_eff = calculate_U(H_eff, self._step_size / 2)
 
         shape = A.shape
         new_A = np.reshape(A, -1)
@@ -231,7 +232,7 @@ class TDVP(Algorithm):
             H_eff.shape[0] * H_eff.shape[1],
             H_eff.shape[2] * H_eff.shape[3]
         ))
-        U_eff = self.calculate_U(H_eff, -self._step_size / 2)
+        U_eff = calculate_U(H_eff, -self._step_size / 2)
 
         shape = C.shape
         new_C = np.reshape(C, -1)

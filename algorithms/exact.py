@@ -1,6 +1,7 @@
 import numpy as np
 
 from algorithms import Algorithm
+from lautils import calculate_U
 from tensor_networks import MPS, MPO
 
 
@@ -12,7 +13,7 @@ class Exact(Algorithm):
 
     def __init__(self, psi_0: MPS, H: MPO, step_size: float, max_bond_dim: int) -> None:
         super().__init__(psi_0, H, step_size, max_bond_dim)
-        self._U = self.calculate_U(self._H.as_matrix(), self._step_size)
+        self._U = calculate_U(self._H.as_matrix(), self._step_size)
 
     @property
     def psi(self) -> MPS:

@@ -8,10 +8,10 @@ from tensor_networks import MPS, MPO
 
 class Algorithm(ABC):
     _H: MPO
-    _step_size: complex
+    _step_size: float
 
     @abstractmethod
-    def __init__(self, psi_0: MPS, H: MPO, step_size: complex, max_bond_dim: int) -> None:
+    def __init__(self, psi_0: MPS, H: MPO, step_size: float, max_bond_dim: int) -> None:
         self.psi = psi_0
         self._H = H
         self._step_size = step_size
@@ -30,13 +30,6 @@ class Algorithm(ABC):
     @abstractmethod
     def psi(self, value: MPS) -> None:
         pass
-
-    @classmethod
-    def calculate_U(cls, H_matrix: np.ndarray, step_size: complex) -> np.ndarray:
-        w, v = np.linalg.eigh(H_matrix)
-        t = -1j * (np.pi / 2) * step_size
-        w = np.exp(t * w)
-        return (w * v) @ v.conj().T
 
     @classmethod
     def classical_evolution(cls, first_column: np.ndarray, rules: Rules, plot_steps: int) -> np.ndarray:
