@@ -126,9 +126,9 @@ class QuantumGame(object):
                     heatmaps.append(classical)
                 heatmaps += [
                     population,
-                    d_population,
+                    # d_population,
                     single_site_entropy,
-                    bond_dims / args.max_bond_dim
+                    # bond_dims / args.max_bond_dim
                 ]
                 # Save the plots to files
                 plot.plot(heatmaps=heatmaps, path=path)
