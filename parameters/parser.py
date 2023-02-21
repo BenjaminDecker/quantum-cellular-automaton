@@ -52,7 +52,7 @@ class Parser(object):
             "--initial-states",
             dest="INITIAL_STATES",
             nargs="*",
-            choices=["blinker", "triple_blinker", "single", "single_bottom", "all_ket_0", "all_ket_1",
+            choices=["blinker", "triple_blinker", "full_blinker", "single", "single_bottom", "all_ket_0", "all_ket_1",
                      "all_ket_1_but_outer", "equal_superposition", "equal_superposition_but_outer", "gradient", "rand"],
             help="List of initial states"
         )

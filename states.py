@@ -22,6 +22,15 @@ def triple_blinker() -> MPS:
     return MPS.from_density_distribution(plist=plist)
 
 
+def full_blinker() -> MPS:
+    plist = []
+    alternate = True
+    for i in range(args.rules.ncells):
+        plist.append(float(alternate))
+        alternate = not alternate
+    return MPS.from_density_distribution(plist=plist)
+
+
 def single(position=int(args.rules.ncells / 2)) -> MPS:
     plist = [0.] * args.rules.ncells
     plist[position] = 1.
