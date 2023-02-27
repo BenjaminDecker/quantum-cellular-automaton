@@ -28,16 +28,16 @@ class QuantumGame(object):
     def start(self) -> None:
         args = self.args
         for index, initial_state in enumerate(self.initial_states):
-            population = np.empty(
+            population = np.zeros(
                 [args.plot_steps, args.rules.ncells]
             )
-            d_population = np.empty(
+            d_population = np.zeros(
                 [args.plot_steps, args.rules.ncells]
             )
-            single_site_entropy = np.empty(
+            single_site_entropy = np.zeros(
                 [args.plot_steps, args.rules.ncells]
             )
-            bond_dims = np.empty(
+            bond_dims = np.zeros(
                 [args.plot_steps, args.rules.ncells + 1]
             )
             state_name: str
@@ -116,22 +116,23 @@ class QuantumGame(object):
                     os.getcwd(),
                     F"{args.plot_file_path}{file_name}.{format}"
                 )
-                heatmaps = []
+                discrete_heatmaps = []
+                if args.plot_bond_dims:
+                    discrete_heatmaps.append((bond_dims, "bond\ndimensions"))
                 if args.plot_classical:
                     classical = Algorithm.classical_evolution(
                         first_column=d_population[0, :],
                         rules=args.rules,
                         plot_steps=args.plot_steps
                     )
-                    heatmaps.append(classical)
-                heatmaps += [
-                    population,
+                    discrete_heatmaps.append((classical, "\nclassical"))
+                prob_heatmaps = [
+                    (population, "probability"),
                     # d_population,
-                    single_site_entropy,
-                    # bond_dims / args.max_bond_dim
+                    (single_site_entropy, "probability")
                 ]
                 # Save the plots to files
-                plot.plot(heatmaps=heatmaps, path=path)
+                plot.plot(path=path, probability_heatmaps=prob_heatmaps, discrete_heatmaps=discrete_heatmaps)
                 if args.show:
                     # Show the plot files
                     webbrowser.open("file://" + path, new=2)

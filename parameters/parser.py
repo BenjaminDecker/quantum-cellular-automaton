@@ -102,6 +102,12 @@ class Parser(object):
             help="Plot the classical non-quantum time evolution"
         )
         plot_group.add_argument(
+            "--plot-bond-dims",
+            dest="PLOT_BOND_DIMS",
+            action="store_true",
+            help="Plot the bond dimensions of the mps"
+        )
+        plot_group.add_argument(
             "--show",
             dest="SHOW",
             action="store_true",
@@ -117,7 +123,7 @@ class Parser(object):
             "--file-formats",
             dest="FORMATS",
             nargs='+',
-            default=["html"],
+            default=["pdf"],
             help="Specify which file formats to write to",
             choices=["html", "eps", "jpeg", "jpg", "pdf", "pgf",
                      "png", "ps", "raw", "rgba", "svg", "svgz", "tif", "tiff"]
@@ -135,6 +141,7 @@ class Parser(object):
         self.step_size = args.STEP_SIZE
         self.algorithm = args.ALGORITHM
         self.plot_classical = args.PLOT_CLASSICAL
+        self.plot_bond_dims = args.PLOT_BOND_DIMS
         self.show = args.SHOW
         self.plot_frequency = args.PLOT_FREQUENCY
         self.plot_file_path = args.PLOT_FILE_PATH

@@ -38,14 +38,20 @@ Use different rules
 python main.py --show --initial-states blinker --distance 2 --activation-interval 2 4
 ```
 
-Write to different file formats
+Write to different file formats (The html output does not look as good as the rest, but works interactively)
 
 ```bash
-python main.py --show --initial-states single --file-formats html svg pdf
+python main.py --show --initial-states single --file-formats html svg png pdf
+```
+
+Also plot the classical evolution and mps bond dimension
+
+```bash
+python main.py --show --initial-states single --plot-classical --plot-bond-dims
 ```
 
 Try the TDVP algorithm (This can take a while)
 
 ```bash
-python main.py --show --initial-states single --algorithm tdvp --num-steps 1000
+python main.py --show --initial-states single --algorithm tdvp --num-steps 1000 --plot-bond-dims
 ```
