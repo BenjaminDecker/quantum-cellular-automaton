@@ -1,5 +1,4 @@
 import numpy as np
-import scipy as scp
 
 
 def _orthonormalize(psi: np.ndarray, vectors: list[np.ndarray]) -> np.ndarray | None:
@@ -60,16 +59,21 @@ def timestep(H: np.ndarray, psi: np.ndarray, delta: float) -> np.ndarray:
     :param delta: The step size of the time evolution
     :return: The result of the time evolution
     """
-    krylov_vectors = [psi / np.linalg.norm(psi)]
-    T = np.array([[krylov_vectors[0].conj().T @ H @ krylov_vectors[0]]])
-    c = scp.linalg.expm(delta * T)[:, 0]
-    while True:
-        new_krylov = _apply_orthonormalize(H, krylov_vectors)
-        if new_krylov is None:
-            break
-        krylov_vectors.append(new_krylov)
-        T = _compute_effective_H(T, H, krylov_vectors)
-        c = calculate_U(T, delta)[:, 0]
-        if np.allclose(c[-1], 0.0):
-            break
-    return c @ np.array(krylov_vectors)
+    # krylov_vectors = [psi / np.linalg.norm(psi)]
+    # T = np.array([[krylov_vectors[0].conj().T @ H @ krylov_vectors[0]]])
+    # c = scp.linalg.expm(delta * T)[:, 0]
+    # while True:
+    #     new_krylov = _apply_orthonormalize(H, krylov_vectors)
+    #     if new_krylov is None:
+    #         break
+    #     krylov_vectors.append(new_krylov)
+    #     T = _compute_effective_H(T, H, krylov_vectors)
+    #     c = calculate_U(T, delta)[:, 0]
+    #     if np.allclose(c[-1], 0.0):
+    #         break
+    # return c @ np.array(krylov_vectors)
+
+    U = calculate_U(H, delta)
+    return np.tensordot(psi, U, (0, 0))
+
+    # return expm_multiply(-1j * (np.pi / 2) * delta * H, psi)

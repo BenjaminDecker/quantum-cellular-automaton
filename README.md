@@ -53,5 +53,5 @@ python main.py --show --initial-states single --plot-classical --plot-bond-dims
 Try the TDVP algorithm (This can take a while)
 
 ```bash
-python main.py --show --initial-states single --algorithm tdvp --num-steps 1000 --plot-bond-dims
+python main.py --show --initial-states single --algorithm tdvp --num-steps 1000 --plot-bond-dims --num-cells 15
 ```

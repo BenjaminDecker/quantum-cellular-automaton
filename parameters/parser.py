@@ -86,6 +86,15 @@ class Parser(object):
             help="The maximum that a bond of the MPS is allowed to grow to during simulation."
                  "Only relevant for the tdvp algorithm."
         )
+        algo_group.add_argument(
+            "--svd-epsilon",
+            dest="SVD_EPSILON",
+            type=float,
+            default=0.0001,
+            help="A measure of accuracy for the truncation step after splitting a mps tensor. This parameter controls "
+                 "how quickly the bond dimension of the mps grows during the simulation. Lower means more accurate, "
+                 "but slower."
+        )
         plot_group = parser.add_argument_group('Plot')
         plot_group.add_argument(
             "--plot-frequency",
@@ -153,6 +162,7 @@ class Parser(object):
         if self.initial_state_files is None:
             self.initial_state_files = []
         self.max_bond_dim = args.MAX_BOND_DIM
+        self.svd_epsilon = args.SVD_EPSILON
         self.plot_step_interval = int(1 / (self.plot_frequency * self.step_size))
         self.plot_steps = self.num_steps // self.plot_step_interval
         if self.num_steps % self.plot_step_interval > 0:

@@ -3,6 +3,7 @@ import numpy as np
 from algorithms import Algorithm
 from lautils import calculate_U
 from tensor_networks import MPS, MPO
+from parameters import Parser
 
 
 class Exact(Algorithm):
@@ -11,9 +12,9 @@ class Exact(Algorithm):
     Does not use any tensor network optimizations.
     """
 
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float, max_bond_dim: int) -> None:
-        super().__init__(psi_0, H, step_size, max_bond_dim)
-        self._U = calculate_U(self._H.as_matrix(), self._step_size)
+    def __init__(self, psi_0: MPS, H: MPO, args: Parser) -> None:
+        super().__init__(psi_0, H, args)
+        self._U = calculate_U(self._H.as_matrix(), self.args.step_size)
 
     @property
     def psi(self) -> MPS:

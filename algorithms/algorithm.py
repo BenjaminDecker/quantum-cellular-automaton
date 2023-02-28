@@ -2,20 +2,20 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+from parameters import Parser
 from parameters import Rules
 from tensor_networks import MPS, MPO
 
 
 class Algorithm(ABC):
     _H: MPO
-    _step_size: float
+    args: Parser
 
     @abstractmethod
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float, max_bond_dim: int) -> None:
+    def __init__(self, psi_0: MPS, H: MPO, args: Parser) -> None:
         self.psi = psi_0
         self._H = H
-        self._step_size = step_size
-        self._max_bond_dim = max_bond_dim
+        self.args = args
 
     @abstractmethod
     def do_time_step(self) -> None:

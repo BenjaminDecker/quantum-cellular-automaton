@@ -59,7 +59,7 @@ class QuantumGame(object):
                 None
             )
 
-            step_size = (
+            self.args.step_size = (
                 args.step_size * args.plot_step_interval if args.algorithm == 'exact' else
                 args.step_size
             )
@@ -67,8 +67,7 @@ class QuantumGame(object):
             algorithm = algorithm_choice(
                 psi_0=initial_state,
                 H=self.H,
-                step_size=step_size,
-                max_bond_dim=args.max_bond_dim
+                args=self.args
             )
 
             logging.info('Running simulation...')

@@ -24,7 +24,7 @@ def triple_blinker() -> MPS:
 
 def full_blinker() -> MPS:
     plist = []
-    alternate = True
+    alternate = False
     for i in range(args.rules.ncells):
         plist.append(float(alternate))
         alternate = not alternate
