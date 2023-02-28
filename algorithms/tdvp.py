@@ -1,10 +1,9 @@
 import numpy as np
 
 from algorithms import Algorithm
-from lautils import timestep
-from tensor_networks import MPS, MPO
-
+from lautils import timestep, normalize
 from parameters import Parser
+from tensor_networks import MPS, MPO
 
 
 class TDVP(Algorithm):
@@ -37,7 +36,6 @@ class TDVP(Algorithm):
         for site in reversed(range(1, num_sites)):
             self._psi.make_site_canonical(site - 1)
             self._update_layer_H_eff(side="right", site=site)
-
 
     @property
     def psi(self) -> MPS:
@@ -222,11 +220,10 @@ class TDVP(Algorithm):
                  .reshape((s_A_left[0] * s_A_left[1], s_A_right[0] * s_A_right[2])))
         u, s, vh = np.linalg.svd(new_A, full_matrices=False)
         max_bond_dim = min(max_bond_dim, len(s))
-        # new_bond_dim = next((i for i, x in enumerate(s) if ((x/s[0]) < epsilon)), max_bond_dim)
         new_bond_dim = next((i for i, x in enumerate(s) if (np.linalg.norm(s[i:]) < epsilon)), max_bond_dim)
         new_A_left = u.reshape((s_A_left[0], s_A_left[1], -1))
         new_A_right = vh.reshape((-1, s_A_right[0], s_A_right[2])).transpose((1, 0, 2))
-        return new_A_left[:, :, :new_bond_dim], s[:new_bond_dim], new_A_right[:, :new_bond_dim, :]
+        return new_A_left[:, :, :new_bond_dim], normalize(s[:new_bond_dim]), new_A_right[:, :new_bond_dim, :]
 
     @classmethod
     def _assemble_H_eff(cls, H_eff_left: np.ndarray, H_eff_right: np.ndarray, W: np.ndarray) -> np.ndarray:
