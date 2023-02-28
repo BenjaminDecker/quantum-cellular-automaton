@@ -1,6 +1,10 @@
 import numpy as np
 
 
+def normalize(v: np.ndarray) -> np.ndarray:
+    return v / np.linalg.norm(v)
+
+
 def _orthonormalize(psi: np.ndarray, vectors: list[np.ndarray]) -> np.ndarray | None:
     """
     Orthonormalize `psi` against all `vectors`
