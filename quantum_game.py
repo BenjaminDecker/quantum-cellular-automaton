@@ -125,13 +125,13 @@ class QuantumGame(object):
                         plot_steps=args.plot_steps
                     )
                     discrete_heatmaps.append((classical, "\nclassical"))
-                prob_heatmaps = [
+                continuous_heatmaps = [
                     (population, "probability"),
                     # d_population,
-                    (single_site_entropy, "probability")
+                    (single_site_entropy, "single-site\nentropy")
                 ]
                 # Save the plots to files
-                plot.plot(path=path, probability_heatmaps=prob_heatmaps, discrete_heatmaps=discrete_heatmaps)
+                plot.plot(path=path, continuous_heatmaps=continuous_heatmaps, discrete_heatmaps=discrete_heatmaps)
                 if args.show:
                     # Show the plot files
                     webbrowser.open("file://" + path, new=2)
