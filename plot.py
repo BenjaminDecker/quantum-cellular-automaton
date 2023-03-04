@@ -48,10 +48,14 @@ def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
         fig.write_html(path)
 
     else:
+        height = max(5, args.rules.ncells/5)
+        width = height * (args.plot_steps/args.rules.ncells)
         fig, axs = plt.subplots(
             len(heatmaps),
-            sharex='all'
+            sharex='all',
+            figsize=(width, height)
         )
+        padding = 0.5 / width
         reference_aspect_ratio = (len(heatmaps[0][0]) / len(heatmaps[0][0][0]))
         for index, (heatmap, label) in enumerate(heatmaps):
             discrete = index >= len(continuous_heatmaps)
@@ -64,12 +68,13 @@ def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
                 vmax=np.max(heatmap) if discrete else 1.
             )
             axs[index].set_ylabel(label.strip())
+
             if discrete:
-                fig.colorbar(pcm, ax=axs[index], aspect=9, ticks=range(int(np.min(heatmap)), int(np.max(heatmap)) + 1))
+                fig.colorbar(pcm, ax=axs[index], aspect=9, ticks=range(int(np.min(heatmap)), int(np.max(heatmap)) + 1), pad=padding)
                 pcm.set_clim(np.min(heatmap) - 0.5, np.max(heatmap) + 0.5)
             axs[index].set_aspect((len(heatmap) / len(heatmap[0])) / reference_aspect_ratio)
             if index == len(continuous_heatmaps) - 1:  # last continuous plot
                 ax = axs[:] if len(discrete_heatmaps) == 0 else axs[:-len(discrete_heatmaps)]
-                fig.colorbar(pcm, ax=ax)
+                fig.colorbar(pcm, ax=ax, pad=padding)
 
         plt.savefig(path, bbox_inches="tight")
