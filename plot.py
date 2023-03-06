@@ -48,14 +48,15 @@ def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
         fig.write_html(path)
 
     else:
-        height = max(5, args.rules.ncells/5)
-        width = height * (args.plot_steps/args.rules.ncells)
+        width, _ = plt.rcParams.get("figure.figsize")
+        # single_height = 2.5
+        # width = single_height * (args.plot_steps/args.rules.ncells)
         fig, axs = plt.subplots(
             len(heatmaps),
             sharex='all',
-            figsize=(width, height)
+            # figsize=(width, single_height * len(heatmaps) + len(heatmaps))
         )
-        padding = 0.5 / width
+        padding = 0.25 / width
         reference_aspect_ratio = (len(heatmaps[0][0]) / len(heatmaps[0][0][0]))
         for index, (heatmap, label) in enumerate(heatmaps):
             discrete = index >= len(continuous_heatmaps)

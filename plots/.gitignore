@@ -3,3 +3,4 @@
 # Except this file and the plot for the README.md
 !.gitignore
 !plot.svg
+!plot2.svg
