@@ -48,20 +48,20 @@ def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
         fig.write_html(path)
 
     else:
-        width, _ = plt.rcParams.get("figure.figsize")
+        width, height = plt.rcParams.get("figure.figsize")
         # single_height = 2.5
         # width = single_height * (args.plot_steps/args.rules.ncells)
         fig, axs = plt.subplots(
             len(heatmaps),
             sharex='all',
-            # figsize=(width, single_height * len(heatmaps) + len(heatmaps))
+            figsize=(width * 2, (height / 8) * len(heatmaps) * len(heatmaps[0]))
         )
         padding = 0.25 / width
         reference_aspect_ratio = (len(heatmaps[0][0]) / len(heatmaps[0][0][0]))
         for index, (heatmap, label) in enumerate(heatmaps):
             discrete = index >= len(continuous_heatmaps)
             if index >= len(continuous_heatmaps):
-                num_ticks = int(np.max(heatmap) - np.min(heatmap) + 1)
+                num_ticks = int(np.max(heatmap) + 1)
             pcm = axs[index].pcolormesh(
                 heatmap.T,
                 cmap=plt.cm.get_cmap(colormap, num_ticks) if discrete else colormap,
@@ -71,8 +71,9 @@ def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
             axs[index].set_ylabel(label.strip())
 
             if discrete:
-                fig.colorbar(pcm, ax=axs[index], aspect=9, ticks=range(int(np.min(heatmap)), int(np.max(heatmap)) + 1), pad=padding)
-                pcm.set_clim(np.min(heatmap) - 0.5, np.max(heatmap) + 0.5)
+                cbar = fig.colorbar(pcm, ax=axs[index], aspect=9, ticks=range(0, int(np.max(heatmap)) + 1), pad=padding)
+                cbar.ax.locator_params(nbins=min(num_ticks, 5))
+                pcm.set_clim(-0.5, (np.max(heatmap) + 0.5))
             axs[index].set_aspect((len(heatmap) / len(heatmap[0])) / reference_aspect_ratio)
             if index == len(continuous_heatmaps) - 1:  # last continuous plot
                 ax = axs[:] if len(discrete_heatmaps) == 0 else axs[:-len(discrete_heatmaps)]

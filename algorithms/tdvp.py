@@ -116,7 +116,6 @@ class TDVP(Algorithm):
 
     def _sweep_left_2tdvp(self) -> None:
         for site in reversed(range(1, len(self._psi.A))):
-            # print(site)
             new_A_left, s, new_A_right = self._evolve_split_and_truncate(
                 A_left=self._psi.A[site - 1],
                 A_right=self._psi.A[site],
@@ -221,6 +220,7 @@ class TDVP(Algorithm):
         u, s, vh = np.linalg.svd(new_A, full_matrices=False)
         max_bond_dim = min(max_bond_dim, len(s))
         new_bond_dim = next((i for i, x in enumerate(s) if (np.linalg.norm(s[i:]) < epsilon)), max_bond_dim)
+        new_bond_dim = min(new_bond_dim, max_bond_dim)
         new_A_left = u.reshape((s_A_left[0], s_A_left[1], -1))
         new_A_right = vh.reshape((-1, s_A_right[0], s_A_right[2])).transpose((1, 0, 2))
         return new_A_left[:, :, :new_bond_dim], normalize(s[:new_bond_dim]), new_A_right[:, :new_bond_dim, :]
