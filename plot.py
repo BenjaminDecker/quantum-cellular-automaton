@@ -58,25 +58,30 @@ def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
         )
         padding = 0.25 / width
         reference_aspect_ratio = (len(heatmaps[0][0]) / len(heatmaps[0][0][0]))
+        only_one_plot = len(heatmaps) == 1
         for index, (heatmap, label) in enumerate(heatmaps):
             discrete = index >= len(continuous_heatmaps)
             if index >= len(continuous_heatmaps):
                 num_ticks = int(np.max(heatmap) + 1)
-            pcm = axs[index].pcolormesh(
+            ax = axs if only_one_plot else axs[index]
+            pcm = ax.pcolormesh(
                 heatmap.T,
                 cmap=plt.cm.get_cmap(colormap, num_ticks) if discrete else colormap,
                 vmin=np.min(heatmap) if discrete else 0.,
                 vmax=np.max(heatmap) if discrete else 1.
             )
-            axs[index].set_ylabel(label.strip())
+            ax.set_ylabel(label.strip())
+            if index == len(heatmaps) - 1:
+                ax.set_xlabel("time steps")
 
             if discrete:
-                cbar = fig.colorbar(pcm, ax=axs[index], aspect=9, ticks=range(0, int(np.max(heatmap)) + 1), pad=padding)
+                cbar = fig.colorbar(pcm, ax=ax, aspect=9, ticks=range(0, int(np.max(heatmap)) + 1), pad=padding)
                 cbar.ax.locator_params(nbins=min(num_ticks, 5))
                 pcm.set_clim(-0.5, (np.max(heatmap) + 0.5))
-            axs[index].set_aspect((len(heatmap) / len(heatmap[0])) / reference_aspect_ratio)
+            ax.set_aspect((len(heatmap) / len(heatmap[0])) / reference_aspect_ratio)
             if index == len(continuous_heatmaps) - 1:  # last continuous plot
-                ax = axs[:] if len(discrete_heatmaps) == 0 else axs[:-len(discrete_heatmaps)]
+                if not only_one_plot:
+                    ax = axs[:] if len(discrete_heatmaps) == 0 else axs[:-len(discrete_heatmaps)]
                 fig.colorbar(pcm, ax=ax, pad=padding)
 
         plt.savefig(path, bbox_inches="tight")

@@ -51,6 +51,12 @@ def all_ket_1() -> MPS:
     return MPS.from_density_distribution(plist=plist)
 
 
+def only_outer() -> MPS:
+    plist = [0.] * args.rules.ncells
+    plist[0] = plist[-1] = 1.
+    return MPS.from_density_distribution(plist=plist)
+
+
 def all_ket_1_but_outer() -> MPS:
     plist = [0.] * args.rules.distance
     plist += [1.] * (args.rules.ncells - 2 * args.rules.distance)

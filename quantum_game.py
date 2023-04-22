@@ -49,13 +49,19 @@ class QuantumGame(object):
             file_name = F"{state_name}{args.rules.ncells}_" \
                         F"r{args.rules.distance}{args.rules.activation_interval.start}{args.rules.activation_interval.stop}_" \
                         F"t{str(args.step_size).replace('.', '')}_" \
-                        F"b{args.max_bond_dim}_" \
-                        F"{args.algorithm}"
+                        F"a{args.algorithm}"
+            if args.algorithm != 'exact':
+                file_name += F"_b{args.max_bond_dim}"
+                if args.convergence_measure == "taylor":
+                    file_name += F"_taylor_{args.taylor_steps}"
+
 
             logging.info('Preparing algorithm...')
             algorithm_choice: Type[Algorithm] = (
                 Exact if args.algorithm == 'exact' else
-                TDVP if args.algorithm == 'tdvp' else
+                TDVP if args.algorithm == '1tdvp' else
+                TDVP if args.algorithm == '2tdvp' else
+                TDVP if args.algorithm == 'a1tdvp' else
                 None
             )
 
@@ -118,6 +124,8 @@ class QuantumGame(object):
                 discrete_heatmaps = []
                 if args.plot_bond_dims:
                     discrete_heatmaps.append((bond_dims, "bond\ndimensions"))
+                if args.plot_rounded:
+                    discrete_heatmaps.append((d_population, "rounded"))
                 if args.plot_classical:
                     classical = Algorithm.classical_evolution(
                         first_column=d_population[0, :],
@@ -125,11 +133,9 @@ class QuantumGame(object):
                         plot_steps=args.plot_steps
                     )
                     discrete_heatmaps.append((classical, "\nclassical"))
-                continuous_heatmaps = [
-                    (population, "probability"),
-                    # d_population,
-                    (single_site_entropy, "single-site\nentropy")
-                ]
+                continuous_heatmaps = [(population, "probability")]
+                if args.plot_sse:
+                    continuous_heatmaps.append((single_site_entropy, "single-site\nentropy"))
                 # Save the plots to files
                 plot.plot(path=path, continuous_heatmaps=continuous_heatmaps, discrete_heatmaps=discrete_heatmaps)
                 if args.show:

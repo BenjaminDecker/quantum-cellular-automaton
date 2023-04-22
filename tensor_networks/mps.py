@@ -29,7 +29,7 @@ class MPS(object):
         """
         Construct an MPS from a list of tensors.
         """
-        return cls(Alist=[np.array(A) for A in Alist])
+        return cls(Alist=[np.array(A, dtype=complex) for A in Alist])
 
     @classmethod
     def from_density_distribution(cls, plist) -> 'MPS':
@@ -37,16 +37,16 @@ class MPS(object):
         Constructs an MPS with bond-dimension 1 from a list of density values describing the probability of each site to
         be in state ket-1.
         """
-        left = np.zeros((2, 1, 1))
-        left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5])
-        right = np.zeros((2, 1, 1))
-        right[:, 0, 0] = np.array([(1. - plist[-1]) ** .5, plist[-1] ** .5])
+        left = np.zeros((2, 1, 1), dtype=complex)
+        left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5], dtype=complex)
+        right = np.zeros((2, 1, 1), dtype=complex)
+        right[:, 0, 0] = np.array([(1. - plist[-1]) ** .5, plist[-1] ** .5], dtype=complex)
         if len(plist) == 1:
             return cls.from_tensors(Alist=[left[:, :, :]])
         Alist = [left]
         for i in range(1, len(plist) - 1):
-            tensor = np.zeros((2, 1, 1))
-            tensor[:, 0, 0] = np.array([(1. - plist[i]) ** .5, (plist[i]) ** .5])
+            tensor = np.zeros((2, 1, 1), dtype=complex)
+            tensor[:, 0, 0] = np.array([(1. - plist[i]) ** .5, (plist[i]) ** .5], dtype=complex)
             Alist.append(tensor)
         Alist.append(right)
         return cls.from_tensors(Alist=Alist)
@@ -57,7 +57,7 @@ class MPS(object):
         Creates an MPS from a full state vector array.
         """
         Alist = []
-        psi = np.array(psi)
+        psi = np.array(psi, dtype=complex)
         psi = np.reshape(psi, (2, -1))
 
         while psi.shape[1] > 1:

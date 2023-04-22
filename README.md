@@ -45,7 +45,7 @@ Write to different file formats (The html output does not look as good as the re
 python main.py --show --initial-states single --file-formats html svg png pdf
 ```
 
-Also plot the classical evolution and mps bond dimension
+Plot the classical evolution and mps bond dimension
 
 ```bash
 python main.py --show --initial-states single --plot-classical --plot-bond-dims
@@ -54,5 +54,5 @@ python main.py --show --initial-states single --plot-classical --plot-bond-dims
 Try the TDVP algorithm (This can take a while)
 
 ```bash
-python main.py --show --initial-states single --algorithm tdvp --num-steps 1000 --plot-bond-dims --num-cells 15
+python main.py --show --initial-states single --algorithm 2tdvp --num-steps 1000 --plotting-frequency 10 --plot-bond-dims --num-cells 15
 ```

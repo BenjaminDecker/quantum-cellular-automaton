@@ -4,6 +4,7 @@ from algorithms import Algorithm
 from lautils import timestep, normalize
 from parameters import Parser
 from tensor_networks import MPS, MPO
+from scipy.sparse.linalg import expm_multiply
 
 
 class TDVP(Algorithm):
@@ -27,15 +28,16 @@ class TDVP(Algorithm):
         self._H_eff_left: list[np.ndarray] = [np.array(0)] * num_sites
         self._H_eff_right: list[np.ndarray] = [np.array(0)] * num_sites
 
-        # self._max_bond_dims: list[int] = [
-        #     min(2 ** i, 2 ** (len(self._psi.A) - i), self._max_bond_dim) for i in range(len(self._psi.A) + 1)
-        # ]
+        self._max_bond_dims: list[int] = [
+            min(2 ** i, 2 ** (len(self._psi.A) - i), self.args.max_bond_dim) for i in range(len(self._psi.A) + 1)
+        ]
 
-        # self._target_bond_dims: list[int] = self._max_bond_dims.copy()
+        self._target_bond_dims: list[int] = self._max_bond_dims.copy()
 
         for site in reversed(range(1, num_sites)):
             self._psi.make_site_canonical(site - 1)
             self._update_layer_H_eff(side="right", site=site)
+        self.counter = 0
 
     @property
     def psi(self) -> MPS:
@@ -50,13 +52,20 @@ class TDVP(Algorithm):
         Update psi by simulating one time step
         """
         self._psi.make_site_canonical(0)
-        self._sweep_right_2tdvp()
-        self._sweep_left_2tdvp()
+        if self.args.algorithm == "2tdvp":
+            self._sweep_right_2tdvp()
+            self._sweep_left_2tdvp()
+            return
+
+        if self.args.algorithm == "a1tdvp":
+            self._calculate_new_target_bond_dims()
+        self._sweep_right()
+        self._sweep_left()
 
     def _sweep_right(self) -> None:
         for site in range(len(self._psi.A)):
             target_shape = (2, self._target_bond_dims[site], self._target_bond_dims[site + 1])
-            new_A = self._evolve_site(site, self._step_size / 2)
+            new_A = self._evolve_site(site, self.args.step_size / 2)
             assert new_A.shape[0] == target_shape[0]
             assert new_A.shape[1] == target_shape[1]
             if site == len(self._psi.A) - 1:
@@ -77,7 +86,7 @@ class TDVP(Algorithm):
     def _sweep_left(self) -> None:
         for site in reversed(range(len(self._psi.A))):
             target_shape = (2, self._target_bond_dims[site], self._target_bond_dims[site + 1])
-            new_A = self._evolve_site(site, self._step_size / 2)
+            new_A = self._evolve_site(site, self.args.step_size / 2)
             assert new_A.shape[0] == target_shape[0]
             assert new_A.shape[2] == target_shape[2]
             if site == 0:
@@ -106,7 +115,8 @@ class TDVP(Algorithm):
                 W_right=self._H.W[site + 1],
                 max_bond_dim=self.args.max_bond_dim,
                 step_size=(self.args.step_size / 2),
-                epsilon=self.args.svd_epsilon
+                epsilon=self.args.svd_epsilon,
+                uff=self._target_bond_dims[site + 1]
             )
             self._psi.A[site] = new_A_left
             self._psi.A[site + 1] = np.tensordot(np.diag(s), new_A_right, (1, 1)).transpose((1, 0, 2))
@@ -125,7 +135,8 @@ class TDVP(Algorithm):
                 W_right=self._H.W[site],
                 max_bond_dim=self.args.max_bond_dim,
                 step_size=(self.args.step_size / 2),
-                epsilon=self.args.svd_epsilon
+                epsilon=self.args.svd_epsilon,
+                uff=self._target_bond_dims[site]
             )
             self._psi.A[site] = new_A_right
             self._psi.A[site - 1] = np.tensordot(new_A_left, np.diag(s), (2, 0))
@@ -198,12 +209,70 @@ class TDVP(Algorithm):
         else:
             self._H_eff_right[site] = new_H_eff
 
+    def _calculate_new_target_bond_dims(self) -> None:
+        num_sites = len(self._psi.A)
+        for site in range(num_sites - 1):
+            self._psi.make_site_canonical(site + 1)
+            self._update_layer_H_eff(side="left", site=site)
+        for bond in reversed(range(1, num_sites)):
+            A_left, A_right = self._psi.A[bond - 1], self._psi.A[bond]
+            W_left, W_right = self._H.W[bond - 1], self._H.W[bond]
+            s_A_left, s_A_right = A_left.shape, A_right.shape
+            A = (np.tensordot(A_left, A_right, (2, 1))
+                 .transpose((0, 2, 1, 3))
+                 .reshape((s_A_left[0] * s_A_right[0], s_A_left[1], s_A_right[2])))
+            s_W_left, s_W_right = W_left.shape, W_right.shape
+            W = (np.tensordot(W_left, W_right, (3, 2))
+                 .transpose((0, 3, 1, 4, 2, 5))
+                 .reshape((s_W_left[0] * s_W_right[0], s_W_left[1] * s_W_right[1], s_W_left[2], s_W_right[3])))
+            H_eff = self._assemble_H_eff(self._get_layer_H_eff("left", bond - 2), self._get_layer_H_eff("right", bond + 1), W)
+            assert H_eff.shape[1] == H_eff.shape[4]
+            assert H_eff.shape[2] == H_eff.shape[5]
+            assert len(H_eff.shape) == 6
+            H_eff = np.reshape(H_eff, (
+                H_eff.shape[0] * H_eff.shape[1] * H_eff.shape[2],
+                H_eff.shape[3] * H_eff.shape[4] * H_eff.shape[5]
+            ))
+
+
+            shape = A.shape
+            new_A = np.reshape(A, -1)
+
+
+            if self.args.convergence_measure == "taylor":
+                H_eff *= -1j * (np.pi / 2) * self.args.step_size / 2
+                new_H_eff = np.eye(len(H_eff), dtype=complex)
+                H_eff_acc = H_eff.copy()
+                for i in range(self.args.taylor_steps):
+                    new_H_eff += H_eff_acc / np.math.factorial(i)
+                    H_eff_acc = H_eff_acc @ H_eff
+                new_A = np.tensordot(new_H_eff, new_A, (0, 0))
+
+            if self.args.convergence_measure == "expm_multiply":
+                H_eff *= -1j * (np.pi / 2) * self.args.step_size / 2
+                new_A = expm_multiply(H_eff, new_A)
+
+            if self.args.convergence_measure == "exact_exponential":
+                new_A = timestep(H_eff, new_A, self.args.step_size / 2)
+
+
+            new_A = (new_A.reshape((s_A_left[0], s_A_right[0], s_A_left[1], s_A_right[2]))
+                     .transpose((0, 2, 1, 3))
+                     .reshape((s_A_left[0] * s_A_left[1], s_A_right[0] * s_A_right[2])))
+            u, s, vh = np.linalg.svd(new_A, full_matrices=False)
+            max_bond_dim = min(self._max_bond_dims[bond], len(s))
+            new_bond_dim = next((i for i, x in enumerate(s) if (np.linalg.norm(s[i:]) < self.args.svd_epsilon)), max_bond_dim)
+            self._target_bond_dims[bond] = max(1, min(new_bond_dim, max_bond_dim))
+            self._psi.make_site_canonical(bond - 1)
+
+
+
     @classmethod
     def _evolve_split_and_truncate(
             cls, A_left: np.ndarray, A_right: np.ndarray,
             H_eff_left: np.ndarray, H_eff_right: np.ndarray,
             W_left: np.ndarray, W_right: np.ndarray,
-            step_size: float, max_bond_dim: int, epsilon: float
+            step_size: float, max_bond_dim: int, epsilon: float, uff: int
     ) -> (np.ndarray, np.ndarray, np.ndarray):
         s_A_left, s_A_right = A_left.shape, A_right.shape
         A = (np.tensordot(A_left, A_right, (2, 1))
@@ -221,6 +290,7 @@ class TDVP(Algorithm):
         max_bond_dim = min(max_bond_dim, len(s))
         new_bond_dim = next((i for i, x in enumerate(s) if (np.linalg.norm(s[i:]) < epsilon)), max_bond_dim)
         new_bond_dim = min(new_bond_dim, max_bond_dim)
+        # new_bond_dim = uff
         new_A_left = u.reshape((s_A_left[0], s_A_left[1], -1))
         new_A_right = vh.reshape((-1, s_A_right[0], s_A_right[2])).transpose((1, 0, 2))
         return new_A_left[:, :, :new_bond_dim], normalize(s[:new_bond_dim]), new_A_right[:, :new_bond_dim, :]
