@@ -52,8 +52,10 @@ class QuantumGame(object):
                         F"a{args.algorithm}"
             if args.algorithm != 'exact':
                 file_name += F"_b{args.max_bond_dim}"
-                if args.convergence_measure == "taylor":
-                    file_name += F"_taylor_{args.taylor_steps}"
+                if args.algorithm == 'a1tdvp':
+                    file_name += F"_b{args.convergence_measure}"
+                    if args.convergence_measure == "taylor":
+                        file_name += F"_taylor_{args.taylor_steps}"
 
 
             logging.info('Preparing algorithm...')
