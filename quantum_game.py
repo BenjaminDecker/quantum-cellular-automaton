@@ -47,15 +47,15 @@ class QuantumGame(object):
                 state_name = str(index)
 
             file_name = F"{state_name}{args.rules.ncells}_" \
-                        F"r{args.rules.distance}{args.rules.activation_interval.start}{args.rules.activation_interval.stop}_" \
-                        F"t{str(args.step_size).replace('.', '')}_" \
-                        F"a{args.algorithm}"
+                        F"{args.rules.distance}{args.rules.activation_interval.start}{args.rules.activation_interval.stop}_" \
+                        F"{str(args.step_size).replace('.', '')}_" \
+                        F"{args.algorithm}"
             if args.algorithm != 'exact':
-                file_name += F"_b{args.max_bond_dim}"
+                file_name += F"_{args.max_bond_dim}"
                 if args.algorithm == 'a1tdvp':
-                    file_name += F"_b{args.convergence_measure}"
+                    file_name += F"_{args.convergence_measure}"
                     if args.convergence_measure == "taylor":
-                        file_name += F"_taylor_{args.taylor_steps}"
+                        file_name += F"_{args.taylor_steps}"
 
 
             logging.info('Preparing algorithm...')
