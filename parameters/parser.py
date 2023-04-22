@@ -115,7 +115,7 @@ class Parser(object):
             "--svd-epsilon",
             dest="SVD_EPSILON",
             type=float,
-            default=0.0001,
+            default=0.00005,
             help="A measure of accuracy for the truncation step after splitting a mps tensor. This parameter controls "
                  "how quickly the bond dimension of the mps grows during the simulation. Lower means more accurate, "
                  "but slower."

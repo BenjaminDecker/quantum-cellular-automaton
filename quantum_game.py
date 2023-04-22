@@ -76,7 +76,7 @@ class QuantumGame(object):
                 args=self.args
             )
 
-            logging.info('Running simulation...')
+            logging.info(F"Running {file_name}")
             for step in trange(args.num_steps):
                 if step % args.plot_step_interval == 0:
                     plot_step = step // args.plot_step_interval
@@ -115,6 +115,7 @@ class QuantumGame(object):
                         algorithm.do_time_step()
                 if args.algorithm != 'exact':
                     algorithm.do_time_step()
+            logging.info(F"Finished {file_name}")
             # Create one plot for each format specified
             for format in args.file_formats:
                 path = os.path.join(
