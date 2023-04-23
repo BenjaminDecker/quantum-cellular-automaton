@@ -81,11 +81,11 @@ class Parser(object):
                  "version of 'tdvp'"
         )
         algo_group.add_argument(
-            "--convergence-measure",
-            dest="CONVERGENCE_MEASURE",
+            "--approximative-evolution-method",
+            dest="APPROXIMATIVE_EVOLUTION_METHOD",
             default="taylor",
             choices=["taylor", "expm_multiply", "exact_exponential"],
-            help="The convergence measure used to find new target bond dimensions in the a1tdvp algorithm. Is ignored "
+            help="The evolution method used to find new target bond dimensions in the a1tdvp algorithm. Is ignored "
                  "if the chosen algorithm is not 'a1tdvp'."
         )
         algo_group.add_argument(
@@ -186,7 +186,7 @@ class Parser(object):
         self.num_steps = args.NUM_STEPS
         self.step_size = args.STEP_SIZE
         self.algorithm = args.ALGORITHM
-        self.convergence_measure = args.CONVERGENCE_MEASURE
+        self.approximative_evolution_method = args.APPROXIMATIVE_EVOLUTION_METHOD
         self.taylor_steps = args.TAYLOR_STEPS
         self.plot_sse = args.PLOT_SSE
         self.plot_classical = args.PLOT_CLASSICAL

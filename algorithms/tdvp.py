@@ -239,7 +239,7 @@ class TDVP(Algorithm):
             new_A = np.reshape(A, -1)
 
 
-            if self.args.convergence_measure == "taylor":
+            if self.args.approximative_evolution_method == "taylor":
                 H_eff *= -1j * (np.pi / 2) * self.args.step_size / 2
                 new_H_eff = np.eye(len(H_eff), dtype=complex)
                 H_eff_acc = H_eff.copy()
@@ -248,11 +248,11 @@ class TDVP(Algorithm):
                     H_eff_acc = H_eff_acc @ H_eff
                 new_A = np.tensordot(new_H_eff, new_A, (0, 0))
 
-            if self.args.convergence_measure == "expm_multiply":
+            if self.args.approximative_evolution_method == "expm_multiply":
                 H_eff *= -1j * (np.pi / 2) * self.args.step_size / 2
                 new_A = expm_multiply(H_eff, new_A)
 
-            if self.args.convergence_measure == "exact_exponential":
+            if self.args.approximative_evolution_method == "exact_exponential":
                 new_A = timestep(H_eff, new_A, self.args.step_size / 2)
 
 

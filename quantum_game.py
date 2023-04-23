@@ -91,22 +91,22 @@ class QuantumGame(object):
 
                     # Backup all measured data to csv files
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-population.csv",
+                        F"data/{file_name}-population.csv",
                         population[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-d_population.csv",
+                        F"data/{file_name}-d_population.csv",
                         d_population[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-single_site_entropy.csv",
+                        F"data/{file_name}-single_site_entropy.csv",
                         single_site_entropy[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-bond_dims.csv",
+                        F"data/{file_name}-bond_dims.csv",
                         bond_dims[:plot_step, :],
                         delimiter=','
                     )
