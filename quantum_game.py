@@ -53,8 +53,8 @@ class QuantumGame(object):
             if args.algorithm != 'exact':
                 file_name += F"_{args.max_bond_dim}"
                 if args.algorithm == 'a1tdvp':
-                    file_name += F"_{args.convergence_measure}"
-                    if args.convergence_measure == "taylor":
+                    file_name += F"_{args.approximative_evolution_method}"
+                    if args.approximative_evolution_method == "taylor":
                         file_name += F"_{args.taylor_steps}"
 
 
