@@ -4,7 +4,7 @@ import webbrowser
 from typing import Type
 
 import numpy as np
-from tqdm import tqdm
+from tqdm import trange
 
 import plot
 import states
@@ -28,14 +28,17 @@ class QuantumGame(object):
     def start(self) -> None:
         args = self.args
         for index, initial_state in enumerate(self.initial_states):
-            population = np.empty(
+            population = np.zeros(
                 [args.plot_steps, args.rules.ncells]
             )
-            d_population = np.empty(
+            d_population = np.zeros(
                 [args.plot_steps, args.rules.ncells]
             )
-            single_site_entropy = np.empty(
+            single_site_entropy = np.zeros(
                 [args.plot_steps, args.rules.ncells]
+            )
+            bond_dims = np.zeros(
+                [args.plot_steps, args.rules.ncells + 1]
             )
             state_name: str
             if index < len(args.initial_states):
@@ -44,19 +47,27 @@ class QuantumGame(object):
                 state_name = str(index)
 
             file_name = F"{state_name}{args.rules.ncells}_" \
-                        F"r{args.rules.distance}{args.rules.activation_interval.start}{args.rules.activation_interval.stop}_" \
-                        F"t{str(args.step_size).replace('.', '')}_" \
-                        F"b{args.bond_dim}_" \
+                        F"{args.rules.distance}{args.rules.activation_interval.start}{args.rules.activation_interval.stop}_" \
+                        F"{str(args.step_size).replace('.', '')}_" \
                         F"{args.algorithm}"
+            if args.algorithm != 'exact':
+                file_name += F"_{args.max_bond_dim}"
+                if args.algorithm == 'a1tdvp':
+                    file_name += F"_{args.approximative_evolution_method}"
+                    if args.approximative_evolution_method == "taylor":
+                        file_name += F"_{args.taylor_steps}"
+
 
             logging.info('Preparing algorithm...')
             algorithm_choice: Type[Algorithm] = (
                 Exact if args.algorithm == 'exact' else
-                TDVP if args.algorithm == 'tdvp' else
+                TDVP if args.algorithm == '1tdvp' else
+                TDVP if args.algorithm == '2tdvp' else
+                TDVP if args.algorithm == 'a1tdvp' else
                 None
             )
 
-            step_size = (
+            self.args.step_size = (
                 args.step_size * args.plot_step_interval if args.algorithm == 'exact' else
                 args.step_size
             )
@@ -64,33 +75,39 @@ class QuantumGame(object):
             algorithm = algorithm_choice(
                 psi_0=initial_state,
                 H=self.H,
-                step_size=step_size
+                args=self.args
             )
 
-            logging.info('Running simulation...')
-            for step in tqdm(range(args.num_steps)):
+            logging.info(F"Running {file_name}")
+            for step in trange(args.num_steps):
                 if step % args.plot_step_interval == 0:
                     plot_step = step // args.plot_step_interval
                     algorithm.measure(
                         population=population[plot_step, :],
                         d_population=d_population[plot_step, :],
                         single_site_entropy=single_site_entropy[plot_step, :],
+                        bond_dims=bond_dims[plot_step, :]
                     )
 
                     # Backup all measured data to csv files
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-population.csv",
+                        F"data/{file_name}-population.csv",
                         population[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-d_population.csv",
+                        F"data/{file_name}-d_population.csv",
                         d_population[:plot_step, :],
                         delimiter=','
                     )
                     np.savetxt(
-                        F"{args.plot_file_path}{file_name}-single_site_entropy.csv",
+                        F"data/{file_name}-single_site_entropy.csv",
                         single_site_entropy[:plot_step, :],
+                        delimiter=','
+                    )
+                    np.savetxt(
+                        F"data/{file_name}-bond_dims.csv",
+                        bond_dims[:plot_step, :],
                         delimiter=','
                     )
 
@@ -100,27 +117,30 @@ class QuantumGame(object):
                         algorithm.do_time_step()
                 if args.algorithm != 'exact':
                     algorithm.do_time_step()
+            logging.info(F"Finished {file_name}")
             # Create one plot for each format specified
             for format in args.file_formats:
                 path = os.path.join(
                     os.getcwd(),
                     F"{args.plot_file_path}{file_name}.{format}"
                 )
-                heatmaps = []
+                discrete_heatmaps = []
+                if args.plot_bond_dims:
+                    discrete_heatmaps.append((bond_dims, "bond\ndimensions"))
+                if args.plot_rounded:
+                    discrete_heatmaps.append((d_population, "rounded"))
                 if args.plot_classical:
                     classical = Algorithm.classical_evolution(
                         first_column=d_population[0, :],
                         rules=args.rules,
                         plot_steps=args.plot_steps
                     )
-                    heatmaps.append(classical)
-                heatmaps += [
-                    population,
-                    d_population,
-                    single_site_entropy
-                ]
+                    discrete_heatmaps.append((classical, "\nclassical"))
+                continuous_heatmaps = [(population, "probability")]
+                if args.plot_sse:
+                    continuous_heatmaps.append((single_site_entropy, "single-site\nentropy"))
                 # Save the plots to files
-                plot.plot(heatmaps=heatmaps, path=path)
+                plot.plot(path=path, continuous_heatmaps=continuous_heatmaps, discrete_heatmaps=discrete_heatmaps)
                 if args.show:
                     # Show the plot files
                     webbrowser.open("file://" + path, new=2)

@@ -2,19 +2,20 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+from parameters import Parser
 from parameters import Rules
 from tensor_networks import MPS, MPO
 
 
 class Algorithm(ABC):
     _H: MPO
-    _step_size: float
+    args: Parser
 
     @abstractmethod
-    def __init__(self, psi_0: MPS, H: MPO, step_size: float) -> None:
+    def __init__(self, psi_0: MPS, H: MPO, args: Parser) -> None:
         self.psi = psi_0
         self._H = H
-        self._step_size = step_size
+        self.args = args
 
     @abstractmethod
     def do_time_step(self) -> None:
@@ -31,16 +32,9 @@ class Algorithm(ABC):
         pass
 
     @classmethod
-    def calculate_U(cls, H_matrix: np.ndarray, step_size: float) -> np.ndarray:
-        w, v = np.linalg.eigh(H_matrix)
-        t = -1j * (np.pi / 2) * step_size
-        w = np.exp(t * w)
-        return (w * v) @ v.conj().T
-
-    @classmethod
     def classical_evolution(cls, first_column: np.ndarray, rules: Rules, plot_steps: int) -> np.ndarray:
         """
-        Non-Quantum time evolution according to classical wolfram rules
+        Non-Quantum time evolution governed by classical wolfram rules
         """
         heatmap = np.zeros([plot_steps, len(first_column)])
         heatmap[0, :] = first_column
@@ -61,9 +55,9 @@ class Algorithm(ABC):
 
         return heatmap
 
-    def measure(self, population, d_population, single_site_entropy) -> None:
+    def measure(self, population, d_population, single_site_entropy, bond_dims) -> None:
         """
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays
         """
-        self.psi.measure(population, d_population, single_site_entropy)
+        self.psi.measure(population, d_population, single_site_entropy, bond_dims)

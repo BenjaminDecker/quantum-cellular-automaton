@@ -29,24 +29,24 @@ class MPS(object):
         """
         Construct an MPS from a list of tensors.
         """
-        return cls(Alist=[np.array(A) for A in Alist])
+        return cls(Alist=[np.array(A, dtype=complex) for A in Alist])
 
     @classmethod
-    def from_density_distribution(cls, plist, bond_dim=args.bond_dim) -> 'MPS':
+    def from_density_distribution(cls, plist) -> 'MPS':
         """
-        Constructs an MPS with the given bond-dimension from a list of density values describing the probability of
-        each site to be in state ket-1.
+        Constructs an MPS with bond-dimension 1 from a list of density values describing the probability of each site to
+        be in state ket-1.
         """
-        left = np.zeros((2, 1, bond_dim))
-        left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5])
-        right = np.zeros((2, bond_dim, 1))
-        right[:, 0, 0] = np.array([(1. - plist[-1]) ** .5, plist[-1] ** .5])
+        left = np.zeros((2, 1, 1), dtype=complex)
+        left[:, 0, 0] = np.array([(1. - plist[0]) ** .5, plist[0] ** .5], dtype=complex)
+        right = np.zeros((2, 1, 1), dtype=complex)
+        right[:, 0, 0] = np.array([(1. - plist[-1]) ** .5, plist[-1] ** .5], dtype=complex)
         if len(plist) == 1:
             return cls.from_tensors(Alist=[left[:, :, :]])
         Alist = [left]
         for i in range(1, len(plist) - 1):
-            tensor = np.zeros((2, bond_dim, bond_dim))
-            tensor[:, 0, 0] = np.array([(1. - plist[i]) ** .5, (plist[i]) ** .5])
+            tensor = np.zeros((2, 1, 1), dtype=complex)
+            tensor[:, 0, 0] = np.array([(1. - plist[i]) ** .5, (plist[i]) ** .5], dtype=complex)
             Alist.append(tensor)
         Alist.append(right)
         return cls.from_tensors(Alist=Alist)
@@ -57,7 +57,7 @@ class MPS(object):
         Creates an MPS from a full state vector array.
         """
         Alist = []
-        psi = np.array(psi)
+        psi = np.array(psi, dtype=complex)
         psi = np.reshape(psi, (2, -1))
 
         while psi.shape[1] > 1:
@@ -81,28 +81,32 @@ class MPS(object):
 
     # TODO find better name
     @classmethod
-    def left_qr_tensors(cls, A: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def left_qr_tensors(cls, A: np.ndarray, reduced=True) -> tuple[np.ndarray, np.ndarray]:
         s = A.shape
-        assert s[2] > 1
-        Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])))
+        Q, R = np.linalg.qr(np.reshape(A, (s[0] * s[1], s[2])), mode='reduced' if reduced else 'complete')
         Q = np.reshape(Q, (s[0], s[1], -1))
         return Q, R
 
     @classmethod
-    def right_qr_tensors(cls, A) -> tuple[np.ndarray, np.ndarray]:
-        A_new, R_new = cls.left_qr_tensors(
-            np.transpose(A, (0, 2, 1))
+    def right_qr_tensors(cls, A: np.ndarray, reduced=True) -> tuple[np.ndarray, np.ndarray]:
+        Q, R = cls.left_qr_tensors(
+            np.transpose(A, (0, 2, 1)),
+            reduced
         )
-        A_new = np.transpose(A_new, (0, 2, 1))
-        R_new = np.transpose(R_new, (1, 0))
-        return A_new, R_new
+        Q = np.transpose(Q, (0, 2, 1))
+        R = np.transpose(R, (1, 0))
+        return Q, R
 
-    def measure(self, population, d_population, single_site_entropy) -> None:
+    def measure(self, population, d_population, single_site_entropy, bond_dims) -> None:
         """
         Measures the population, rounded population and single-site entropy of the given state and writes the results
         into the given arrays
         """
         # Start with the orthogonality center at site 0
+        assert (len(self.A) + 1) == len(bond_dims)
+        for i in range(len(self.A)):
+            bond_dims[i] = self.A[i].shape[1]
+        bond_dims[-1] = self.A[-1].shape[2]
         self.make_site_canonical(0)
         first = True
         for site in range(len(self.A)):
@@ -141,12 +145,15 @@ class MPS(object):
 
     def orthonormalize_left_qr(self, i) -> 'MPS':
         """
-        Left-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at next site.
+        Left-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor one site to the right
         """
         assert i < len(self.A) - 1
         A = self.A[i]
+        shape = A.shape
         # perform QR decomposition and replace A by reshaped Q matrix
         A_new, R = MPS.left_qr_tensors(A)
+        A_new = MPS.truncate_and_pad_into_shape(A_new, shape)
+        R = MPS.truncate_and_pad_into_shape(R, (shape[2], self.A[i + 1].shape[1]))
         # update Anext tensor: multiply with R from left
         Aright = np.transpose(
             np.tensordot(R, self.A[i + 1], (1, 1)),
@@ -158,18 +165,22 @@ class MPS(object):
 
     def orthonormalize_right_qr(self, i) -> 'MPS':
         """
-        Right-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor at previous site.
+        Right-orthonormalize the MPS tensor at index i by a QR decomposition, and update tensor one site to the left
         """
         assert i > 0
         A = self.A[i]
+        shape = A.shape
         # perform QR decomposition and replace A by reshaped Q matrix
         A_new, R = MPS.right_qr_tensors(A)
+        A_new = MPS.truncate_and_pad_into_shape(A_new, shape)
+        R = MPS.truncate_and_pad_into_shape(R, (self.A[i - 1].shape[2], shape[1]))
         # update left tensor: multiply with R from right
         Aleft = np.tensordot(self.A[i - 1], R, (2, 0))
         self.A[i] = A_new
         self.A[i - 1] = Aleft
         return self
 
+    # TODO use a site hint
     def make_site_canonical(self, i) -> 'MPS':
         """
         Brings the mps into site-canonical form with the center at site i
@@ -193,11 +204,33 @@ class MPS(object):
                 psi.shape[2],
                 psi.shape[3]
             ))
-        # contract leftmost and rightmost virtual bond (has no influence if these virtual bond dimensions are 1)
         psi = np.trace(psi, axis1=1, axis2=2)
         return psi
 
     def print_shapes(self) -> None:
+        shapes_str = ""
         for A in self.A:
-            print(A.shape)
-        print("")
+            shapes_str += F"{A.shape} "
+        print(shapes_str)
+
+    def is_valid_mps(self) -> bool:
+        if self.A[0].shape[1] != 1 or self.A[-1].shape[2] != 1:
+            return False
+        if self.A[0].shape[2] != self.A[1].shape[1] or self.A[-1].shape[1] != self.A[-2].shape[2]:
+            return False
+        for i in range(1, len(self.A) - 1):
+            if self.A[i].shape[1] != self.A[i - 1].shape[2] or self.A[i].shape[2] != self.A[i + 1].shape[1]:
+                return False
+        return True
+
+    @classmethod
+    def truncate_and_pad_into_shape(cls, tensor: np.ndarray, target_shape: tuple[int, ...]) -> np.ndarray:
+        assert len(tensor.shape) == len(target_shape)
+        indices = tuple(slice(0, min(target_shape[i], tensor.shape[i])) for i in range(len(target_shape)))
+        # If tensor does not need to be padded, return a slice on it
+        if all(tensor_shape >= target_shape for tensor_shape, target_shape in zip(tensor.shape, target_shape)):
+            return tensor[indices]
+        new_tensor = np.zeros(target_shape, dtype=tensor.dtype)
+        new_tensor[indices] = tensor[indices]
+        assert new_tensor.shape == target_shape
+        return new_tensor

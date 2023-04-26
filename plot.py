@@ -1,6 +1,7 @@
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -9,16 +10,20 @@ from parameters import Parser
 args = Parser.instance()
 
 colormap = "inferno"
+colormap2 = "viridis"
 
 
-def plot(heatmaps, path) -> None:
+def plot(path, continuous_heatmaps: list[(np.ndarray, str)] = None,
+         discrete_heatmaps: list[(np.ndarray, str)] = None) -> None:
     _, file_extension = os.path.splitext(path)
+    heatmaps = continuous_heatmaps + discrete_heatmaps
     if file_extension == ".html":
         fig = make_subplots(rows=len(heatmaps))
 
-        for index, heatmap in enumerate(heatmaps):
+        for index, (heatmap, label) in enumerate(heatmaps):
+            discrete = index >= len(continuous_heatmaps)
             fig.add_trace(
-                go.Heatmap(z=heatmap.T, coloraxis="coloraxis"),
+                go.Heatmap(z=heatmap.T, coloraxis="coloraxis2" if discrete else "coloraxis"),
                 index + 1,
                 1
             )
@@ -26,41 +31,57 @@ def plot(heatmaps, path) -> None:
                 scaleanchor="x" + str(index + 1),
                 row=(index + 1)
             )
-
+        flattened_discrete_values = [item for sublist in heatmaps[len(continuous_heatmaps):] for subsublist in
+                                     sublist[0] for item in subsublist]
+        if len(flattened_discrete_values) > 0:
+            fig.update_layout(
+                coloraxis2={
+                    "colorscale": colormap2,
+                    "cmax": max(1.0, max(flattened_discrete_values)),
+                    "cmin": min(flattened_discrete_values),
+                    "colorbar_xpad": 100
+                }
+            )
         fig.update_layout(
-            coloraxis={"colorscale": colormap, "cmax": 1.0, "cmin": 0.0}
+            coloraxis={"colorscale": colormap, "cmax": 1., "cmin": 0.0}
         )
         fig.write_html(path)
 
     else:
-        _, height = plt.rcParams.get("figure.figsize")
-        ratio = args.plot_steps / (len(heatmaps) * args.rules.ncells)
-        ratio = max(ratio, 1.)
+        width, height = plt.rcParams.get("figure.figsize")
+        # single_height = 2.5
+        # width = single_height * (args.plot_steps/args.rules.ncells)
         fig, axs = plt.subplots(
             len(heatmaps),
-            sharex=True,
-            sharey=True,
-            figsize=(height * ratio, height)
+            sharex='all',
+            figsize=(width * 2, (height / 8) * len(heatmaps) * len(heatmaps[0]))
         )
-
-        for index, heatmap in enumerate(heatmaps):
-            pcm = axs[index].pcolormesh(
+        padding = 0.25 / width
+        reference_aspect_ratio = (len(heatmaps[0][0]) / len(heatmaps[0][0][0]))
+        only_one_plot = len(heatmaps) == 1
+        for index, (heatmap, label) in enumerate(heatmaps):
+            discrete = index >= len(continuous_heatmaps)
+            if index >= len(continuous_heatmaps):
+                num_ticks = int(np.max(heatmap) + 1)
+            ax = axs if only_one_plot else axs[index]
+            pcm = ax.pcolormesh(
                 heatmap.T,
-                cmap=colormap,
-                vmin=0.,
-                vmax=1.
+                cmap=plt.cm.get_cmap(colormap, num_ticks) if discrete else colormap,
+                vmin=np.min(heatmap) if discrete else 0.,
+                vmax=np.max(heatmap) if discrete else 1.
             )
-            if args.plot_steps < 50:
-                axs[index].set_aspect("equal")
+            ax.set_ylabel(label.strip())
+            if index == len(heatmaps) - 1:
+                ax.set_xlabel("time steps")
 
-        fig.colorbar(pcm, ax=axs[:])
-
-        # I use subplots_adjust to move the colorbar closer to the heatmaps
-        # I don't know why, but .77 and .78 seem to give good results for their respective plot_step-ranges
-        if args.rules.ncells < 15:
-            if args.plot_steps <= 200:
-                plt.subplots_adjust(right=.77)
-            else:
-                plt.subplots_adjust(right=.78)
+            if discrete:
+                cbar = fig.colorbar(pcm, ax=ax, aspect=9, ticks=range(0, int(np.max(heatmap)) + 1), pad=padding)
+                cbar.ax.locator_params(nbins=min(num_ticks, 5))
+                pcm.set_clim(-0.5, (np.max(heatmap) + 0.5))
+            ax.set_aspect((len(heatmap) / len(heatmap[0])) / reference_aspect_ratio)
+            if index == len(continuous_heatmaps) - 1:  # last continuous plot
+                if not only_one_plot:
+                    ax = axs[:] if len(discrete_heatmaps) == 0 else axs[:-len(discrete_heatmaps)]
+                fig.colorbar(pcm, ax=ax, pad=padding)
 
         plt.savefig(path, bbox_inches="tight")
