@@ -1,6 +1,10 @@
 # quantum-cellular-automaton
 
 ## A Classical Simulation of the Quantum Game of Life
+
+> [!NOTE]
+> A new and improved version of this project, re-written in the Julia langugage can be found [here](https://github.com/BenjaminDecker/QuantumGameOfLife.jl).
+
 ![](plots/plot.svg)
 
 ![](plots/plot2.svg)
